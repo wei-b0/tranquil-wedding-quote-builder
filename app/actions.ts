@@ -35,7 +35,7 @@ export async function loginAction(formData: FormData) {
 export async function logoutAction() {
   const supabase = await createSupabaseServerClient()
   await supabase.auth.signOut()
-  redirect("/login")
+  redirect("/login?loggedout=1")
 }
 
 export async function createQuoteAction(formData: FormData) {
@@ -57,7 +57,7 @@ export async function saveQuoteAction(formData: FormData) {
   revalidatePath(`/quotes/${saved.id}`)
   revalidatePath(`/quotes/${saved.id}/edit`)
   revalidatePath(`/q/${saved.slug}`)
-  redirect(intent === "preview" ? `/quotes/${saved.id}` : `/quotes/${saved.id}/edit?saved=1`)
+  redirect(intent === "preview" ? `/quotes/${saved.id}?saved=1` : `/quotes/${saved.id}/edit?saved=1`)
 }
 
 export async function duplicateQuoteAction(formData: FormData) {
@@ -67,7 +67,7 @@ export async function duplicateQuoteAction(formData: FormData) {
   const duplicated = await store.duplicateQuote(session, id)
   revalidatePath("/dashboard")
   if (!duplicated) {
-    redirect("/dashboard")
+    redirect("/dashboard?error=Quote+could+not+be+duplicated.")
   }
   redirect(`/quotes/${duplicated.id}/edit`)
 }
@@ -79,7 +79,7 @@ export async function trashQuoteAction(formData: FormData) {
   await store.trashQuote(session, id)
   revalidatePath("/dashboard")
   revalidatePath("/trash")
-  redirect("/dashboard")
+  redirect("/dashboard?trashed=1")
 }
 
 export async function restoreQuoteAction(formData: FormData) {
@@ -92,7 +92,7 @@ export async function restoreQuoteAction(formData: FormData) {
   if (quote) {
     revalidatePath(`/q/${quote.slug}`)
   }
-  redirect("/trash")
+  redirect("/trash?restored=1")
 }
 
 export async function deleteQuotePermanentlyAction(formData: FormData) {
@@ -106,5 +106,5 @@ export async function deleteQuotePermanentlyAction(formData: FormData) {
   if (quote) {
     revalidatePath(`/q/${quote.slug}`)
   }
-  redirect("/trash")
+  redirect("/trash?deleted=1")
 }

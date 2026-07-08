@@ -2,7 +2,10 @@ import Link from "next/link"
 
 import { createQuoteAction, duplicateQuoteAction, trashQuoteAction } from "@/app/actions"
 import { DashboardShell } from "@/components/dashboard-shell"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { PdfExportLink } from "@/components/pdf-export-link"
+import { SubmitButton } from "@/components/submit-button"
+import { ToastOnMount } from "@/components/toast-on-mount"
+import { buttonVariants } from "@/components/ui/button"
 import { requireSession } from "@/lib/auth"
 import { formatDateLabel } from "@/lib/quotes/format"
 import { getQuoteStore } from "@/lib/quotes/store"
@@ -10,7 +13,7 @@ import { getQuoteStore } from "@/lib/quotes/store"
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ search?: string }>
+  searchParams: Promise<{ search?: string; trashed?: string; error?: string }>
 }) {
   const session = await requireSession()
   const params = await searchParams
@@ -26,13 +29,20 @@ export default async function DashboardPage({
       actions={
         <>
           <form action={createQuoteAction}>
-            <Button type="submit" size="lg" className="rounded-full bg-stone-900 px-5 text-white hover:bg-stone-800 hover:text-white">
+            <SubmitButton
+              size="lg"
+              pendingText="Creating…"
+              className="rounded-full bg-stone-900 px-5 text-white hover:bg-stone-800 hover:text-white"
+            >
               New quotation
-            </Button>
+            </SubmitButton>
           </form>
         </>
       }
     >
+      {params.trashed ? <ToastOnMount message="Quote moved to trash." /> : null}
+      {params.error ? <ToastOnMount message={params.error} type="error" /> : null}
+
       <section className="rounded-[2rem] border border-stone-200 bg-white/85 p-5 shadow-[0_18px_45px_rgba(48,32,20,0.06)]">
         <form className="flex flex-col gap-3 md:flex-row">
           <input
@@ -41,9 +51,9 @@ export default async function DashboardPage({
             className="h-12 flex-1 rounded-full border border-stone-200 bg-stone-50 px-5 text-sm text-stone-900 outline-none transition focus:border-amber-500"
             placeholder="Search client, title, location, or status"
           />
-          <Button type="submit" variant="outline" size="lg" className="h-12 rounded-full px-5">
+          <SubmitButton variant="outline" size="lg" pendingText="Searching…" className="h-12 rounded-full px-5">
             Search
-          </Button>
+          </SubmitButton>
         </form>
       </section>
 
@@ -89,24 +99,23 @@ export default async function DashboardPage({
                   >
                     Share page
                   </Link>
-                  <Link
+                  <PdfExportLink
                     href={`/api/quotes/${quote.id}/pdf`}
-                    target="_blank"
                     className={buttonVariants({ variant: "outline", className: "hover:text-stone-900" })}
                   >
                     Export PDF
-                  </Link>
+                  </PdfExportLink>
                   <form action={duplicateQuoteAction}>
                     <input type="hidden" name="id" value={quote.id} />
-                    <Button type="submit" variant="secondary">
+                    <SubmitButton variant="secondary" pendingText="Duplicating…">
                       Duplicate
-                    </Button>
+                    </SubmitButton>
                   </form>
                   <form action={trashQuoteAction}>
                     <input type="hidden" name="id" value={quote.id} />
-                    <Button type="submit" variant="ghost">
+                    <SubmitButton variant="ghost" pendingText="Deleting…">
                       Delete
-                    </Button>
+                    </SubmitButton>
                   </form>
                 </div>
               </div>

@@ -1,6 +1,7 @@
 import "./globals.css"
 import { quoteAccentFont, quoteBodyFont, quoteDisplayFont } from "@/app/fonts"
 import { ThemeProvider } from "@/components/theme-provider"
+import { Toaster } from "@/components/ui/sonner"
 import { cn } from "@/lib/utils"
 
 export default function RootLayout({
@@ -20,7 +21,10 @@ export default function RootLayout({
       )}
     >
       <body suppressHydrationWarning>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          {children}
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   )

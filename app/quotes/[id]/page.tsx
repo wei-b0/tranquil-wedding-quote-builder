@@ -2,18 +2,23 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 
 import { DashboardShell } from "@/components/dashboard-shell"
+import { PdfExportLink } from "@/components/pdf-export-link"
 import { QuotePreview } from "@/components/quote-preview"
+import { ToastOnMount } from "@/components/toast-on-mount"
 import { buttonVariants } from "@/components/ui/button"
 import { requireSession } from "@/lib/auth"
 import { getQuoteStore } from "@/lib/quotes/store"
 
 export default async function QuotePreviewPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>
+  searchParams: Promise<{ saved?: string }>
 }) {
   const session = await requireSession()
   const { id } = await params
+  const { saved } = await searchParams
   const store = getQuoteStore()
   const quote = await store.getQuoteById(session, id)
 
@@ -34,16 +39,16 @@ export default async function QuotePreviewPage({
           <a href={`/q/${quote.slug}`} target="_blank" className={buttonVariants({ variant: "outline" })}>
             Open public page
           </a>
-          <a
+          <PdfExportLink
             href={`/api/quotes/${quote.id}/pdf`}
-            target="_blank"
             className={buttonVariants({ variant: "default", className: "hover:text-primary-foreground" })}
           >
             Export PDF
-          </a>
+          </PdfExportLink>
         </>
       }
     >
+      {saved ? <ToastOnMount message="Quote saved." /> : null}
       <QuotePreview quote={quote} />
     </DashboardShell>
   )

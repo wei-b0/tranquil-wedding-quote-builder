@@ -1,7 +1,11 @@
 "use client"
 
 import { useState } from "react"
+import { useFormStatus } from "react-dom"
+import { Loader2 } from "lucide-react"
 
+import { PdfExportLink } from "@/components/pdf-export-link"
+import { ToastOnMount } from "@/components/toast-on-mount"
 import { Button } from "@/components/ui/button"
 import { applyCoverageDefaults } from "@/lib/quotes/defaults"
 import { syncPackagePricing } from "@/lib/quotes/format"
@@ -382,11 +386,63 @@ function PackageCard({
   )
 }
 
+function SaveActions({
+  intent,
+  onIntentChange,
+  onOpenPreview,
+}: {
+  intent: "draft" | "share" | "preview"
+  onIntentChange: (intent: "draft" | "share" | "preview") => void
+  onOpenPreview: () => void
+}) {
+  const { pending } = useFormStatus()
+
+  return (
+    <section className="sticky bottom-4 z-10 flex flex-wrap items-center gap-3 rounded-[1.5rem] border border-[#ddd7cc] bg-white/90 p-4 shadow-[0_18px_45px_rgba(48,32,20,0.12)] backdrop-blur">
+      <Button
+        type="submit"
+        variant="secondary"
+        disabled={pending}
+        className="bg-[#f3c747] text-[#3d382f] hover:bg-[#ebc95d] hover:text-[#3d382f]"
+        onClick={() => onIntentChange("share")}
+      >
+        {pending && intent === "share" ? <Loader2 className="animate-spin" /> : null}
+        Save and share
+      </Button>
+      <Button
+        type="submit"
+        disabled={pending}
+        className="bg-[#6f7f68] text-white hover:bg-[#65755e] hover:text-white"
+        onClick={() => onIntentChange("draft")}
+      >
+        {pending && intent === "draft" ? <Loader2 className="animate-spin" /> : null}
+        Save draft
+      </Button>
+      <Button
+        type="submit"
+        variant="outline"
+        disabled={pending}
+        className="hover:text-[#39362f]"
+        onClick={() => onIntentChange("preview")}
+      >
+        {pending && intent === "preview" ? <Loader2 className="animate-spin" /> : null}
+        Save and preview
+      </Button>
+      <Button type="button" variant="ghost" onClick={onOpenPreview}>
+        Open Current Preview
+      </Button>
+    </section>
+  )
+}
+
 export function QuoteEditor({ initialQuote, saveAction }: QuoteEditorProps) {
   const [quote, setQuote] = useState<QuoteRecord>(initialQuote)
   const [intent, setIntent] = useState<"draft" | "share" | "preview">("draft")
   const [isLegalSectionOpen, setIsLegalSectionOpen] = useState(false)
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
+  const [showSavedToast] = useState(
+    () => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("saved") === "1"
+  )
 
   return (
     <div>
@@ -863,21 +919,10 @@ export function QuoteEditor({ initialQuote, saveAction }: QuoteEditorProps) {
           ) : null}
         </section>
 
-        <section className="sticky bottom-4 z-10 flex flex-wrap items-center gap-3 rounded-[1.5rem] border border-[#ddd7cc] bg-white/90 p-4 shadow-[0_18px_45px_rgba(48,32,20,0.12)] backdrop-blur">
-          <Button type="submit" variant="secondary" className="bg-[#f3c747] text-[#3d382f] hover:bg-[#ebc95d] hover:text-[#3d382f]" onClick={() => setIntent("share")}>
-            Save and share
-          </Button>
-          <Button type="submit" className="bg-[#6f7f68] text-white hover:bg-[#65755e] hover:text-white" onClick={() => setIntent("draft")}>
-            Save draft
-          </Button>
-          <Button type="submit" variant="outline" className="hover:text-[#39362f]" onClick={() => setIntent("preview")}>
-            Save and preview
-          </Button>
-          <Button type="button" variant="ghost" onClick={() => setIsPreviewOpen(true)}>
-            Open Current Preview
-          </Button>
-        </section>
+        <SaveActions intent={intent} onIntentChange={setIntent} onOpenPreview={() => setIsPreviewOpen(true)} />
       </form>
+
+      {showSavedToast ? <ToastOnMount message="Quote saved." /> : null}
 
       {isPreviewOpen ? (
         <div className="fixed inset-0 z-50 bg-black/55 px-4 py-6 backdrop-blur-sm">
@@ -888,14 +933,12 @@ export function QuoteEditor({ initialQuote, saveAction }: QuoteEditorProps) {
                 <h2 className="mt-1 font-serif text-2xl text-[#39362f]">Current quotation preview</h2>
               </div>
               <div className="flex items-center gap-3">
-                <a
+                <PdfExportLink
                   href={`/api/quotes/${quote.id}/pdf`}
-                  target="_blank"
-                  rel="noreferrer"
                   className="rounded-full border border-[#ddd7cc] px-4 py-2 text-sm text-[#5e5a54] transition hover:border-[#c8c0b2] hover:bg-[#f6f1e8] hover:text-[#5e5a54]"
                 >
                   Open in new tab
-                </a>
+                </PdfExportLink>
                 <Button type="button" variant="outline" onClick={() => setIsPreviewOpen(false)}>
                   Close
                 </Button>

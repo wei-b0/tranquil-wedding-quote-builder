@@ -2,7 +2,9 @@ import Link from "next/link"
 
 import { deleteQuotePermanentlyAction, restoreQuoteAction } from "@/app/actions"
 import { DashboardShell } from "@/components/dashboard-shell"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { SubmitButton } from "@/components/submit-button"
+import { ToastOnMount } from "@/components/toast-on-mount"
+import { buttonVariants } from "@/components/ui/button"
 import { requireSession } from "@/lib/auth"
 import { formatDateLabel } from "@/lib/quotes/format"
 import { getQuoteStore } from "@/lib/quotes/store"
@@ -19,7 +21,7 @@ function getDaysUntilExpiry(value: string | null) {
 export default async function TrashPage({
   searchParams,
 }: {
-  searchParams: Promise<{ search?: string }>
+  searchParams: Promise<{ search?: string; restored?: string; deleted?: string }>
 }) {
   const session = await requireSession()
   const params = await searchParams
@@ -38,6 +40,9 @@ export default async function TrashPage({
         </Link>
       }
     >
+      {params.restored ? <ToastOnMount message="Quote restored." /> : null}
+      {params.deleted ? <ToastOnMount message="Quote permanently deleted." /> : null}
+
       <section className="rounded-[2rem] border border-stone-200 bg-white/85 p-5 shadow-[0_18px_45px_rgba(48,32,20,0.06)]">
         <form className="flex flex-col gap-3 md:flex-row">
           <input
@@ -46,9 +51,9 @@ export default async function TrashPage({
             className="h-12 flex-1 rounded-full border border-stone-200 bg-stone-50 px-5 text-sm text-stone-900 outline-none transition focus:border-amber-500"
             placeholder="Search deleted client, title, location, or status"
           />
-          <Button type="submit" variant="outline" size="lg" className="h-12 rounded-full px-5">
+          <SubmitButton variant="outline" size="lg" pendingText="Searching…" className="h-12 rounded-full px-5">
             Search
-          </Button>
+          </SubmitButton>
         </form>
       </section>
 
@@ -102,15 +107,15 @@ export default async function TrashPage({
                     </Link>
                     <form action={restoreQuoteAction}>
                       <input type="hidden" name="id" value={quote.id} />
-                      <Button type="submit" variant="secondary">
+                      <SubmitButton variant="secondary" pendingText="Restoring…">
                         Restore
-                      </Button>
+                      </SubmitButton>
                     </form>
                     <form action={deleteQuotePermanentlyAction}>
                       <input type="hidden" name="id" value={quote.id} />
-                      <Button type="submit" variant="ghost">
+                      <SubmitButton variant="ghost" pendingText="Deleting…">
                         Delete permanently
-                      </Button>
+                      </SubmitButton>
                     </form>
                   </div>
                 </div>

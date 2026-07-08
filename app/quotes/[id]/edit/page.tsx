@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 
 import { saveQuoteAction } from "@/app/actions"
 import { DashboardShell } from "@/components/dashboard-shell"
+import { PdfExportLink } from "@/components/pdf-export-link"
 import { QuoteEditor } from "@/components/quote-editor"
 import { buttonVariants } from "@/components/ui/button"
 import { requireSession } from "@/lib/auth"
@@ -27,13 +28,12 @@ export default async function EditQuotePage({
       title="Quotation Builder"
       subtitle="Adjust event details, package options, delivery promises, and contact information while keeping the client preview aligned in real time."
       actions={
-        <a
+        <PdfExportLink
           href={`/api/quotes/${quote.id}/pdf`}
-          target="_blank"
           className={buttonVariants({ variant: "outline", className: "hover:text-stone-900" })}
         >
           Export PDF
-        </a>
+        </PdfExportLink>
       }
     >
       <QuoteEditor initialQuote={quote} saveAction={saveQuoteAction} />

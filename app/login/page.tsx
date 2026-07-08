@@ -1,12 +1,13 @@
 import { loginAction } from "@/app/actions"
-import { Button } from "@/components/ui/button"
+import { SubmitButton } from "@/components/submit-button"
+import { ToastOnMount } from "@/components/toast-on-mount"
 
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>
+  searchParams: Promise<{ error?: string; loggedout?: string }>
 }) {
-  const { error } = await searchParams
+  const { error, loggedout } = await searchParams
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(244,201,147,0.35),transparent_28%),linear-gradient(180deg,#2a1a13_0%,#6c4831_48%,#f7efe4_100%)] px-4 py-10">
@@ -47,6 +48,8 @@ export default async function LoginPage({
               {error}
             </div>
           ) : null}
+          {error ? <ToastOnMount message={error} type="error" /> : null}
+          {loggedout ? <ToastOnMount message="Signed out." /> : null}
 
           <form action={loginAction} className="mt-8 grid gap-4">
             <label className="grid gap-2 text-sm text-stone-700">
@@ -69,9 +72,13 @@ export default async function LoginPage({
                 placeholder="••••••••"
               />
             </label>
-            <Button type="submit" size="lg" className="mt-2 h-12 rounded-full bg-stone-900 px-6 text-white hover:bg-stone-800">
+            <SubmitButton
+              size="lg"
+              pendingText="Signing in…"
+              className="mt-2 h-12 rounded-full bg-stone-900 px-6 text-white hover:bg-stone-800"
+            >
               Enter quote builder
-            </Button>
+            </SubmitButton>
           </form>
         </section>
       </div>

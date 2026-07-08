@@ -1,7 +1,7 @@
 import Link from "next/link"
 
 import { logoutAction } from "@/app/actions"
-import { Button } from "@/components/ui/button"
+import { SubmitButton } from "@/components/submit-button"
 import type { QuoteSession } from "@/lib/quotes/types"
 
 export function DashboardShell({
@@ -41,9 +41,9 @@ export function DashboardShell({
                 {session.name} · {session.email}
               </div>
               <form action={logoutAction}>
-                <Button type="submit" variant="outline">
+                <SubmitButton variant="outline" pendingText="Signing out…">
                   Sign out
-                </Button>
+                </SubmitButton>
               </form>
             </div>
           </div>
