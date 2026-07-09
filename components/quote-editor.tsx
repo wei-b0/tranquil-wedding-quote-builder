@@ -717,6 +717,14 @@ export function QuoteEditor({ initialQuote, saveAction }: QuoteEditorProps) {
               <Field label="Section title">
                 <input className={inputClassName()} value={quote.preWeddingLabel} onChange={(event) => setQuote((current) => ({ ...current, preWeddingLabel: event.target.value }))} />
               </Field>
+              <Field label="Date">
+                <input
+                  type="date"
+                  className={inputClassName()}
+                  value={quote.preWeddingDate}
+                  onChange={(event) => setQuote((current) => ({ ...current, preWeddingDate: event.target.value }))}
+                />
+              </Field>
               <RowsEditor
                 label="Prewedding team"
                 values={quote.preWeddingTeam}

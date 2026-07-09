@@ -32,6 +32,7 @@ export const quotePayloadSchema = z.object({
   ),
   includePreWedding: z.boolean(),
   preWeddingLabel: z.string(),
+  preWeddingDate: z.string(),
   preWeddingTeam: z.array(z.string()),
   preWeddingDeliverables: z.array(z.string()),
   packages: z

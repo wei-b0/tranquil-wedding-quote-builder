@@ -435,6 +435,13 @@ const styles = StyleSheet.create({
   preWeddingCopy: {
     width: "48%",
   },
+  preWeddingDate: {
+    marginBottom: 10,
+    fontSize: 6.7,
+    letterSpacing: 1.5,
+    textTransform: "uppercase",
+    color: quoteTheme.colors.sage,
+  },
   preWeddingVisual: {
     width: "47%",
     marginLeft: "5%",
@@ -1068,6 +1075,9 @@ export function buildQuotePdfDocument(
             />
             <View style={styles.preWeddingShell}>
               <View style={styles.preWeddingCopy}>
+                <Text style={styles.preWeddingDate}>
+                  {quote.preWeddingDate ? formatDateLabel(quote.preWeddingDate) : "Date to be decided"}
+                </Text>
                 <BulletList items={quote.preWeddingDeliverables} />
                 <View style={styles.teamRow}>
                   {quote.preWeddingTeam.map((member) => (

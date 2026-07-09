@@ -582,7 +582,13 @@ export function QuotePreview({ quote, publicView = false }: QuotePreviewProps) {
               style={{ borderColor: quoteTheme.colors.line }}
             >
               <div>
-                <div className="grid gap-3 sm:grid-cols-2">
+                <p
+                  className="text-[0.68rem] tracking-[0.22em] uppercase"
+                  style={{ color: quoteTheme.colors.sage }}
+                >
+                  {quote.preWeddingDate ? formatDateLabel(quote.preWeddingDate) : "Date to be decided"}
+                </p>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
                   {quote.preWeddingDeliverables.map((item) => (
                     <div
                       key={item}

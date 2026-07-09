@@ -66,6 +66,7 @@ export type QuoteRecord = {
   events: QuoteEvent[]
   includePreWedding: boolean
   preWeddingLabel: string
+  preWeddingDate: string
   preWeddingTeam: string[]
   preWeddingDeliverables: string[]
   packages: QuotePackage[]

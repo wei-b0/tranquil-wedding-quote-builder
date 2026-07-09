@@ -133,6 +133,7 @@ export function createDefaultQuote(ownerEmail: string): QuoteRecord {
     ],
     includePreWedding: true,
     preWeddingLabel: "Prewedding",
+    preWeddingDate: "",
     preWeddingTeam: ["Candid", "Cinematographer", "Drone"],
     preWeddingDeliverables: [
       "Best selected edited pictures with premium color grading",
