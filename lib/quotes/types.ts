@@ -38,6 +38,16 @@ export type QuotePackage = {
   specialFeatures: string[]
 }
 
+export type SalesProfile = {
+  userId: string
+  displayName: string
+  title: string
+  email: string
+  phone: string
+  whatsapp: string
+  avatarUrl: string | null
+}
+
 export type ContactBlock = {
   email: string
   website: string
@@ -54,6 +64,7 @@ export type QuoteRecord = {
   expiresAt: string | null
   createdAt: string
   updatedAt: string
+  creatorUserId: string
   ownerEmail: string
   clientName: string
   partnerName: string
@@ -91,6 +102,11 @@ export type QuoteListItem = Pick<
   | "location"
   | "updatedAt"
 >
+
+export type QuoteView = {
+  quote: QuoteRecord
+  salesProfile: SalesProfile | null
+}
 
 export type QuoteSession = {
   userId: string

@@ -12,13 +12,14 @@ export async function GET(
   const session = await requireSession()
   const { id } = await params
   const store = getQuoteStore()
-  const quote = await store.getQuoteById(session, id)
+  const quoteView = await store.getQuoteViewById(session, id)
 
-  if (!quote || quote.status === "trashed") {
+  if (!quoteView || quoteView.quote.status === "trashed") {
     return new Response("Not found", { status: 404 })
   }
 
-  const stream = await renderToStream(buildQuotePdfDocument(quote))
+  const { quote, salesProfile } = quoteView
+  const stream = await renderToStream(buildQuotePdfDocument(quote, salesProfile))
   const body = Readable.toWeb(stream as Readable)
 
   return new Response(body as BodyInit, {

@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useState } from "react"
 import { useFormStatus } from "react-dom"
 import { Loader2 } from "lucide-react"
@@ -888,40 +889,14 @@ export function QuoteEditor({ initialQuote, saveAction }: QuoteEditorProps) {
                 onChange={(privacyPolicy) => setQuote((current) => ({ ...current, privacyPolicy }))}
                 addLabel="Add privacy point"
               />
-              <div className="grid gap-4 md:grid-cols-2">
-                <Field label="Email">
-                  <input
-                    className={inputClassName()}
-                    value={quote.contact.email}
-                    onChange={(event) =>
-                      setQuote((current) => ({ ...current, contact: { ...current.contact, email: event.target.value } }))
-                    }
-                  />
-                </Field>
-                <Field label="Website">
-                  <input
-                    className={inputClassName()}
-                    value={quote.contact.website}
-                    onChange={(event) =>
-                      setQuote((current) => ({ ...current, contact: { ...current.contact, website: event.target.value } }))
-                    }
-                  />
-                </Field>
-                <RowsEditor
-                  label="Phone numbers"
-                  values={quote.contact.phones}
-                  onChange={(phones) => setQuote((current) => ({ ...current, contact: { ...current.contact, phones } }))}
-                  addLabel="Add phone"
-                />
-                <Field label="WhatsApp number">
-                  <input
-                    className={inputClassName()}
-                    value={quote.contact.whatsapp}
-                    onChange={(event) =>
-                      setQuote((current) => ({ ...current, contact: { ...current.contact, whatsapp: event.target.value } }))
-                    }
-                  />
-                </Field>
+              <div className="rounded-[1.35rem] border border-[#ddd7cc] bg-[#fcfaf5] px-5 py-4">
+                <p className="text-xs uppercase tracking-[0.24em] text-[#857a63]">Creator-led closing CTA</p>
+                <p className="mt-2 text-sm leading-7 text-[#5e5a54]">
+                  Reserve Now and WhatsApp contact details now come from the quote creator&apos;s sales profile instead of each quote.
+                </p>
+                <Link href="/settings/profile" className="mt-4 inline-flex rounded-full border border-[#d4c7a7] bg-[#f8edd0] px-4 py-2 text-sm font-medium text-[#5d4e2e] transition hover:border-[#c4b385] hover:bg-[#f3e2b2] hover:text-[#5d4e2e]">
+                  Manage creator profile
+                </Link>
               </div>
             </div>
           ) : null}

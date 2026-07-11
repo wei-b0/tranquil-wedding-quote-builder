@@ -26,7 +26,7 @@ export default async function EditQuotePage({
     <DashboardShell
       session={session}
       title="Quotation Builder"
-      subtitle="Adjust event details, package options, delivery promises, and contact information while keeping the client preview aligned in real time."
+      subtitle="Adjust event details, package options, delivery promises, and legal sections while keeping the client preview aligned in real time."
       actions={
         <PdfExportLink
           href={`/api/quotes/${quote.id}/pdf`}

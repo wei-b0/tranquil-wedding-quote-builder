@@ -10,16 +10,18 @@ export default async function PublicQuotePage({
 }) {
   const { slug } = await params
   const store = getQuoteStore()
-  const quote = await store.getQuoteBySlug(slug)
+  const quoteView = await store.getQuoteViewBySlug(slug)
 
-  if (!quote) {
+  if (!quoteView) {
     notFound()
   }
+
+  const { quote, salesProfile } = quoteView
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#f6efe6_0%,#fffaf3_20%,#fffdf9_100%)] px-4 py-8 md:px-8 md:py-10">
       <div className="mx-auto max-w-6xl">
-        <QuotePreview quote={quote} publicView />
+        <QuotePreview quote={quote} salesProfile={salesProfile} publicView />
       </div>
     </div>
   )

@@ -2,6 +2,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { createSupabaseAnonClient } from "@/lib/supabase/public"
 import { applyCoverageDefaults, createDefaultQuote, normalizeDiscountType } from "@/lib/quotes/defaults"
 import { syncPackagePricing } from "@/lib/quotes/format"
+import { getSalesProfileStore } from "@/lib/sales-profiles/store"
 import type {
   ActiveQuoteStatus,
   ContactBlock,
@@ -12,13 +13,16 @@ import type {
   QuoteRecord,
   QuoteSession,
   QuoteStatus,
+  QuoteView,
+  SalesProfile,
 } from "@/lib/quotes/types"
 
 type QuoteStore = {
   listQuotes(session: QuoteSession, search?: string): Promise<QuoteListItem[]>
   listTrash(session: QuoteSession, search?: string): Promise<QuoteListItem[]>
   getQuoteById(session: QuoteSession, id: string): Promise<QuoteRecord | null>
-  getQuoteBySlug(slug: string): Promise<QuoteRecord | null>
+  getQuoteViewById(session: QuoteSession, id: string): Promise<QuoteView | null>
+  getQuoteViewBySlug(slug: string): Promise<QuoteView | null>
   saveQuote(session: QuoteSession, quote: QuoteRecord): Promise<QuoteRecord>
   duplicateQuote(session: QuoteSession, id: string): Promise<QuoteRecord | null>
   trashQuote(session: QuoteSession, id: string): Promise<void>
@@ -59,8 +63,11 @@ function toRow(quote: QuoteRecord, ownerId: string) {
   }
 }
 
-function fromRow(row: Pick<QuoteRow, "payload">): QuoteRecord {
-  return normalizeQuote(row.payload)
+function fromRow(row: Pick<QuoteRow, "payload" | "owner_id">): QuoteRecord {
+  return normalizeQuote({
+    ...row.payload,
+    creatorUserId: row.payload.creatorUserId || row.owner_id || "",
+  })
 }
 
 function normalizeLegacyRoleLabel(value: string) {
@@ -151,7 +158,7 @@ function normalizeContact(input: Partial<ContactBlock> | undefined, fallback: Co
 
 export function normalizeQuote(input: QuoteRecord): QuoteRecord {
   const status = normalizeStoredStatus((input as { status?: unknown }).status)
-  const fallback = createDefaultQuote(input.ownerEmail || "sales@thetranquilwedding.com")
+  const fallback = createDefaultQuote(input.ownerEmail || "sales@thetranquilwedding.com", input.creatorUserId || "")
   const lastActiveStatus =
     normalizeActiveStatus((input as { lastActiveStatus?: unknown }).lastActiveStatus) ||
     (status === "shared" ? "shared" : "draft")
@@ -175,6 +182,7 @@ export function normalizeQuote(input: QuoteRecord): QuoteRecord {
     ...fallback,
     ...input,
     status,
+    creatorUserId: input.creatorUserId || fallback.creatorUserId,
     lastActiveStatus: status === "shared" ? "shared" : status === "draft" ? "draft" : lastActiveStatus,
     trashedAt,
     expiresAt,
@@ -234,11 +242,35 @@ function toListItem(quote: QuoteRecord): QuoteListItem {
   }
 }
 
+function normalizePublicSalesProfile(input: unknown): SalesProfile | null {
+  if (!input || typeof input !== "object") {
+    return null
+  }
+
+  const value = input as Partial<SalesProfile>
+
+  return {
+    userId: String(value.userId ?? ""),
+    displayName: String(value.displayName ?? "").trim(),
+    title: String(value.title ?? "").trim(),
+    email: String(value.email ?? "").trim(),
+    phone: String(value.phone ?? "").trim(),
+    whatsapp: String(value.whatsapp ?? "").trim(),
+    avatarUrl: typeof value.avatarUrl === "string" && value.avatarUrl.trim() ? value.avatarUrl.trim() : null,
+  }
+}
+
+async function resolveQuoteView(session: QuoteSession, quote: QuoteRecord): Promise<QuoteView> {
+  const profileStore = getSalesProfileStore()
+  const salesProfile = await profileStore.getProfileByUserId(session, quote.creatorUserId || session.userId)
+  return { quote, salesProfile }
+}
+
 function createSlug() {
   return crypto.randomUUID().replaceAll("-", "").slice(0, 18)
 }
 
-function copyQuoteForDuplicate(source: QuoteRecord, ownerEmail: string): QuoteRecord {
+function copyQuoteForDuplicate(source: QuoteRecord, ownerEmail: string, creatorUserId: string): QuoteRecord {
   const now = new Date().toISOString()
 
   return {
@@ -249,6 +281,7 @@ function copyQuoteForDuplicate(source: QuoteRecord, ownerEmail: string): QuoteRe
     lastActiveStatus: "draft",
     trashedAt: null,
     expiresAt: null,
+    creatorUserId,
     ownerEmail,
     createdAt: now,
     updatedAt: now,
@@ -273,40 +306,59 @@ const supabaseStore: QuoteStore = {
   async listQuotes(session, search) {
     const supabase = await createSupabaseServerClient()
     await purgeExpiredTrash(supabase, session.userId)
-    const { data, error } = await supabase.from("quotes").select("payload").neq("status", "trashed")
+    const { data, error } = await supabase.from("quotes").select("payload, owner_id").neq("status", "trashed")
     if (error) throw error
 
-    const quotes = (data ?? []).map((row) => fromRow(row as Pick<QuoteRow, "payload">))
+    const quotes = (data ?? []).map((row) => fromRow(row as Pick<QuoteRow, "payload" | "owner_id">))
     return applySearchAndSort(quotes, search).map(toListItem)
   },
 
   async listTrash(session, search) {
     const supabase = await createSupabaseServerClient()
     await purgeExpiredTrash(supabase, session.userId)
-    const { data, error } = await supabase.from("quotes").select("payload").eq("status", "trashed")
+    const { data, error } = await supabase.from("quotes").select("payload, owner_id").eq("status", "trashed")
     if (error) throw error
 
-    const quotes = (data ?? []).map((row) => fromRow(row as Pick<QuoteRow, "payload">))
+    const quotes = (data ?? []).map((row) => fromRow(row as Pick<QuoteRow, "payload" | "owner_id">))
     return applySearchAndSort(quotes, search).map(toListItem)
   },
 
   async getQuoteById(session, id) {
     const supabase = await createSupabaseServerClient()
-    const { data, error } = await supabase.from("quotes").select("payload").eq("id", id).maybeSingle()
+    const { data, error } = await supabase.from("quotes").select("payload, owner_id").eq("id", id).maybeSingle()
     if (error) throw error
-    return data ? fromRow(data as Pick<QuoteRow, "payload">) : null
+    return data ? fromRow(data as Pick<QuoteRow, "payload" | "owner_id">) : null
   },
 
-  async getQuoteBySlug(slug) {
+  async getQuoteViewById(session, id) {
+    const quote = await this.getQuoteById(session, id)
+    if (!quote) return null
+    return resolveQuoteView(session, quote)
+  },
+
+  async getQuoteViewBySlug(slug) {
     const supabase = createSupabaseAnonClient()
-    const { data, error } = await supabase.rpc("get_shared_quote", { p_slug: slug })
+    const { data, error } = await supabase.rpc("get_public_quote_view", { p_slug: slug })
     if (error) throw error
-    return data ? normalizeQuote(data as QuoteRecord) : null
+    if (!data || typeof data !== "object") {
+      return null
+    }
+
+    const quoteValue = (data as { quote?: QuoteRecord }).quote
+    if (!quoteValue) {
+      return null
+    }
+
+    return {
+      quote: normalizeQuote(quoteValue),
+      salesProfile: normalizePublicSalesProfile((data as { salesProfile?: unknown }).salesProfile),
+    }
   },
 
   async saveQuote(session, quote) {
     const nextQuote = normalizeQuote({
       ...quote,
+      creatorUserId: quote.creatorUserId || session.userId,
       ownerEmail: session.email,
       updatedAt: new Date().toISOString(),
     })
@@ -314,10 +366,10 @@ const supabaseStore: QuoteStore = {
     const { data, error } = await supabase
       .from("quotes")
       .upsert(toRow(nextQuote, session.userId))
-      .select("payload")
+      .select("payload, owner_id")
       .single()
     if (error) throw error
-    return fromRow(data as Pick<QuoteRow, "payload">)
+    return fromRow(data as Pick<QuoteRow, "payload" | "owner_id">)
   },
 
   async duplicateQuote(session, id) {
@@ -331,8 +383,8 @@ const supabaseStore: QuoteStore = {
     if (error) throw error
     if (!data) return null
 
-    const source = fromRow(data as Pick<QuoteRow, "payload">)
-    const duplicated = copyQuoteForDuplicate(source, session.email)
+    const source = fromRow({ ...(data as Pick<QuoteRow, "payload">), owner_id: session.userId })
+    const duplicated = copyQuoteForDuplicate(source, session.email, session.userId)
     const { error: insertError } = await supabase.from("quotes").insert(toRow(duplicated, session.userId))
     if (insertError) throw insertError
     return duplicated
@@ -340,11 +392,11 @@ const supabaseStore: QuoteStore = {
 
   async trashQuote(session, id) {
     const supabase = await createSupabaseServerClient()
-    const { data, error } = await supabase.from("quotes").select("payload").eq("id", id).maybeSingle()
+    const { data, error } = await supabase.from("quotes").select("payload, owner_id").eq("id", id).maybeSingle()
     if (error) throw error
     if (!data) return
 
-    const quote = fromRow(data as Pick<QuoteRow, "payload">)
+    const quote = fromRow(data as Pick<QuoteRow, "payload" | "owner_id">)
     const now = new Date().toISOString()
     const nextQuote: QuoteRecord = {
       ...quote,
@@ -364,11 +416,11 @@ const supabaseStore: QuoteStore = {
 
   async restoreQuote(session, id) {
     const supabase = await createSupabaseServerClient()
-    const { data, error } = await supabase.from("quotes").select("payload").eq("id", id).maybeSingle()
+    const { data, error } = await supabase.from("quotes").select("payload, owner_id").eq("id", id).maybeSingle()
     if (error) throw error
     if (!data) return null
 
-    const quote = fromRow(data as Pick<QuoteRow, "payload">)
+    const quote = fromRow(data as Pick<QuoteRow, "payload" | "owner_id">)
     if (quote.status !== "trashed") return null
 
     const nextQuote: QuoteRecord = {
@@ -394,7 +446,7 @@ const supabaseStore: QuoteStore = {
   },
 
   async createQuote(session) {
-    const quote = createDefaultQuote(session.email)
+    const quote = createDefaultQuote(session.email, session.userId)
     const supabase = await createSupabaseServerClient()
     const { data, error } = await supabase
       .from("quotes")
@@ -402,7 +454,7 @@ const supabaseStore: QuoteStore = {
       .select("payload")
       .single()
     if (error) throw error
-    return fromRow(data as Pick<QuoteRow, "payload">)
+    return fromRow({ ...(data as Pick<QuoteRow, "payload">), owner_id: session.userId })
   },
 }
 

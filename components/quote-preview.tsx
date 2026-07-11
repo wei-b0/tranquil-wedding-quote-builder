@@ -9,14 +9,17 @@ import {
   getQuoteImageSlots,
   getEventImageObjectPosition,
   getQuoteSummaryRows,
-  getQuoteWhatsAppHref,
+  getQuoteWhatsAppMessageHref,
+  getSalesProfileInitials,
+  getSalesProfileRoleLine,
   quoteTheme,
 } from "@/lib/quotes/presentation"
-import type { QuoteRecord } from "@/lib/quotes/types"
+import type { QuoteRecord, SalesProfile } from "@/lib/quotes/types"
 import { cn } from "@/lib/utils"
 
 type QuotePreviewProps = {
   quote: QuoteRecord
+  salesProfile?: SalesProfile | null
   publicView?: boolean
 }
 
@@ -207,9 +210,16 @@ function PackageCard({
   )
 }
 
-export function QuotePreview({ quote, publicView = false }: QuotePreviewProps) {
+export function QuotePreview({ quote, salesProfile = null, publicView = false }: QuotePreviewProps) {
   const imageSlots = getQuoteImageSlots(quote)
   const summaryRows = getQuoteSummaryRows(quote)
+  const whatsappHref = salesProfile?.whatsapp
+    ? getQuoteWhatsAppMessageHref(
+        salesProfile.whatsapp,
+        `We reviewed the quotation for ${[quote.clientName, quote.partnerName].filter(Boolean).join(" & ") || quote.quoteTitle} and want to connect.`
+      )
+    : null
+  const initials = getSalesProfileInitials(salesProfile)
 
   return (
     <div
@@ -821,31 +831,78 @@ export function QuotePreview({ quote, publicView = false }: QuotePreviewProps) {
               className="mt-4 max-w-2xl text-sm leading-7"
               style={{ color: "rgba(249,246,243,0.8)" }}
             >
-              If this feels right, let&apos;s lock in your date and fine-tune
-              the coverage around your celebration.
+              If this feels right, your quote consultant can help reserve the date, guide the next payment step, and refine the package over WhatsApp.
             </p>
-            <div className="mt-7 grid gap-3 md:grid-cols-2">
-              <div className="border-b pb-3">{quote.contact.email}</div>
-              <div className="border-b pb-3">{quote.contact.website}</div>
-              <div className="border-b pb-3">
-                {quote.contact.phones.join(" | ")}
-              </div>
-              <div className="border-b pb-3">
-                WhatsApp: {quote.contact.whatsapp}
+            <div
+              className="mt-7 rounded-[1.4rem] border p-5"
+              style={{
+                borderColor: "rgba(249,246,243,0.18)",
+                backgroundColor: "rgba(249,246,243,0.08)",
+              }}
+            >
+              <div className="flex flex-col gap-4 md:flex-row md:items-center">
+                <div
+                  className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border text-xl font-semibold"
+                  style={{
+                    borderColor: quoteTheme.colors.sage,
+                    backgroundColor: "rgba(249,246,243,0.14)",
+                    color: quoteTheme.colors.blush,
+                  }}
+                >
+                  {salesProfile?.avatarUrl ? (
+                    <img
+                      src={salesProfile.avatarUrl}
+                      alt={salesProfile.displayName || "Quote consultant"}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    initials
+                  )}
+                </div>
+                <div>
+                  <p className="font-serif text-3xl" style={{ color: quoteTheme.colors.ivory }}>
+                    {salesProfile?.displayName || "The Tranquil Wedding"}
+                  </p>
+                  <p className="mt-1 text-sm" style={{ color: "rgba(249,246,243,0.8)" }}>
+                    {getSalesProfileRoleLine(salesProfile)}
+                  </p>
+                </div>
               </div>
             </div>
-            {publicView ? (
-              <a
-                href={getQuoteWhatsAppHref(quote.contact.whatsapp)}
-                className="mt-7 inline-flex rounded-full px-6 py-3 text-sm font-semibold"
-                style={{
-                  backgroundColor: quoteTheme.colors.blush,
-                  color: quoteTheme.colors.forest,
-                }}
-              >
-                Contact on WhatsApp
-              </a>
-            ) : null}
+            <div className="mt-7 flex flex-wrap gap-3">
+              {whatsappHref ? (
+                <a
+                  href={whatsappHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex rounded-full px-6 py-3 text-sm font-semibold"
+                  style={{
+                    backgroundColor: "#f3c747",
+                    color: quoteTheme.colors.forest,
+                  }}
+                >
+                  Reserve Now
+                </a>
+              ) : null}
+              {whatsappHref ? (
+                <a
+                  href={whatsappHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex rounded-full border px-6 py-3 text-sm font-semibold"
+                  style={{
+                    borderColor: "rgba(249,246,243,0.22)",
+                    backgroundColor: "rgba(249,246,243,0.08)",
+                    color: quoteTheme.colors.ivory,
+                  }}
+                >
+                  Chat on WhatsApp
+                </a>
+              ) : null}
+            </div>
+            <div className="mt-5 text-xs uppercase tracking-[0.24em]" style={{ color: "rgba(249,246,243,0.58)" }}>
+              The Tranquil Wedding · {quote.contact.website}
+            </div>
           </div>
         </div>
       </footer>

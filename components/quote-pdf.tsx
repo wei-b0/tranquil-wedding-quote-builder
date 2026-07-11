@@ -3,6 +3,7 @@ import {
   Document,
   Font,
   Image,
+  Link,
   Page,
   StyleSheet,
   Text,
@@ -19,10 +20,13 @@ import {
 } from "@/lib/quotes/format"
 import {
   getQuoteImageSlots,
+  getSalesProfileInitials,
+  getSalesProfileRoleLine,
   getQuoteSummaryRows,
+  getQuoteWhatsAppMessageHref,
   quoteTheme,
 } from "@/lib/quotes/presentation"
-import type { QuoteEvent, QuotePackage, QuoteRecord } from "@/lib/quotes/types"
+import type { QuoteEvent, QuotePackage, QuoteRecord, SalesProfile } from "@/lib/quotes/types"
 
 const fontBasePath = path.join(process.cwd(), "public", "fonts")
 
@@ -745,6 +749,41 @@ const styles = StyleSheet.create({
     lineHeight: 1.6,
     color: "rgba(249,246,243,0.8)",
   },
+  closingProfileCard: {
+    marginTop: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: "rgba(249,246,243,0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(249,246,243,0.14)",
+  },
+  closingAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(249,246,243,0.14)",
+    borderWidth: 1,
+    borderColor: quoteTheme.colors.sage,
+  },
+  closingAvatarText: {
+    fontSize: 12,
+    color: quoteTheme.colors.blush,
+  },
+  closingProfileName: {
+    fontFamily: "QuoteDisplay",
+    fontSize: 18,
+    color: quoteTheme.colors.ivory,
+  },
+  closingProfileTitle: {
+    marginTop: 2,
+    fontSize: 8,
+    color: "rgba(249,246,243,0.74)",
+  },
   contactGrid: {
     marginTop: 24,
     flexDirection: "row",
@@ -759,6 +798,51 @@ const styles = StyleSheet.create({
     color: quoteTheme.colors.ivory,
     borderBottomWidth: 1,
     borderBottomColor: pdfDarkDivider,
+  },
+  closingCtaStack: {
+    marginTop: 18,
+    gap: 9,
+  },
+  closingCtaPrimary: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    backgroundColor: "#f3c747",
+  },
+  closingCtaSecondary: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    backgroundColor: "rgba(249,246,243,0.08)",
+  },
+  closingCtaLabel: {
+    fontSize: 7,
+    letterSpacing: 1.3,
+    textTransform: "uppercase",
+    color: quoteTheme.colors.forest,
+  },
+  closingCtaPrimaryText: {
+    marginTop: 4,
+    fontSize: 8.2,
+    lineHeight: 1.5,
+    color: quoteTheme.colors.forest,
+  },
+  closingCtaSecondaryLabel: {
+    fontSize: 7,
+    letterSpacing: 1.3,
+    textTransform: "uppercase",
+    color: quoteTheme.colors.sage,
+  },
+  closingCtaSecondaryText: {
+    marginTop: 4,
+    fontSize: 8.2,
+    lineHeight: 1.5,
+    color: quoteTheme.colors.ivory,
+  },
+  closingBrandLine: {
+    marginTop: 16,
+    fontSize: 7,
+    letterSpacing: 1.5,
+    textTransform: "uppercase",
+    color: "rgba(249,246,243,0.56)",
   },
 })
 
@@ -964,13 +1048,16 @@ function NumberedColumn({ items }: { items: NumberedItem[] }) {
 }
 
 export function buildQuotePdfDocument(
-  quote: QuoteRecord
+  quote: QuoteRecord,
+  salesProfile: SalesProfile | null = null
 ): ReactElement<DocumentProps> {
   const imageSlots = getQuoteImageSlots(quote)
   const summaryRows = getQuoteSummaryRows(quote)
   const eventGroups = chunkArray(quote.events, 2)
   const policyItems = [...quote.terms, ...quote.privacyPolicy]
   const policyPages = chunkArray(policyItems, 18)
+  const whatsappNumber = salesProfile?.whatsapp?.trim() || ""
+  const initials = getSalesProfileInitials(salesProfile)
 
   return (
     <Document title={quoteHeadline(quote)}>
@@ -1197,19 +1284,42 @@ export function buildQuotePdfDocument(
                 Ready to reserve your date?
               </Text>
               <Text style={styles.closingText}>
-                If this direction feels right, the dates can be locked and the
-                coverage can be refined around your exact celebration rhythm.
+                If this direction feels right, your quote consultant can help reserve the date, guide the next payment step, and refine the package over WhatsApp.
               </Text>
-              <View style={styles.contactGrid}>
-                <Text style={styles.contactRow}>{quote.contact.email}</Text>
-                <Text style={styles.contactRow}>{quote.contact.website}</Text>
-                <Text style={styles.contactRow}>
-                  {quote.contact.phones.join(" | ")}
-                </Text>
-                <Text style={styles.contactRow}>
-                  WhatsApp: {quote.contact.whatsapp}
-                </Text>
+              <View style={styles.closingProfileCard}>
+                <View style={styles.closingAvatar}>
+                  <Text style={styles.closingAvatarText}>{initials}</Text>
+                </View>
+                <View>
+                  <Text style={styles.closingProfileName}>
+                    {salesProfile?.displayName || "The Tranquil Wedding"}
+                  </Text>
+                  <Text style={styles.closingProfileTitle}>
+                    {getSalesProfileRoleLine(salesProfile)}
+                  </Text>
+                </View>
               </View>
+              <View style={styles.closingCtaStack}>
+                {whatsappNumber ? (
+                  <Link src={getQuoteWhatsAppMessageHref(whatsappNumber, "We'd like to reserve our date. Please guide us with the next step.")} style={styles.closingCtaPrimary}>
+                    <Text style={styles.closingCtaLabel}>Reserve Now</Text>
+                    <Text style={styles.closingCtaPrimaryText}>
+                      Open WhatsApp chat to reserve your date
+                    </Text>
+                  </Link>
+                ) : null}
+                {whatsappNumber ? (
+                  <Link src={getQuoteWhatsAppMessageHref(whatsappNumber, "We reviewed the quotation and want to discuss the package.")} style={styles.closingCtaSecondary}>
+                    <Text style={styles.closingCtaSecondaryLabel}>Chat on WhatsApp</Text>
+                    <Text style={styles.closingCtaSecondaryText}>
+                      WhatsApp: {whatsappNumber}
+                    </Text>
+                  </Link>
+                ) : null}
+              </View>
+              <Text style={styles.closingBrandLine}>
+                The Tranquil Wedding · {quote.contact.website}
+              </Text>
             </View>
           </View>
         </View>

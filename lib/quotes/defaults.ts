@@ -97,7 +97,7 @@ export function applyCoverageDefaults(quote: QuoteRecord): QuoteRecord {
   }
 }
 
-export function createDefaultQuote(ownerEmail: string): QuoteRecord {
+export function createDefaultQuote(ownerEmail: string, creatorUserId = ""): QuoteRecord {
   const now = new Date().toISOString()
 
   return applyCoverageDefaults({
@@ -109,6 +109,7 @@ export function createDefaultQuote(ownerEmail: string): QuoteRecord {
     expiresAt: null,
     createdAt: now,
     updatedAt: now,
+    creatorUserId,
     ownerEmail,
     clientName: "",
     partnerName: "",

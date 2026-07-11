@@ -36,6 +36,9 @@ for each row execute function public.set_updated_at();
 
 alter table public.quotes enable row level security;
 
+grant usage on schema public to anon, authenticated;
+grant select, insert, update, delete on public.quotes to authenticated;
+
 create policy "quotes_owner_select" on public.quotes
   for select using (owner_id = auth.uid());
 

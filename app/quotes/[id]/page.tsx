@@ -20,11 +20,13 @@ export default async function QuotePreviewPage({
   const { id } = await params
   const { saved } = await searchParams
   const store = getQuoteStore()
-  const quote = await store.getQuoteById(session, id)
+  const quoteView = await store.getQuoteViewById(session, id)
 
-  if (!quote || quote.status === "trashed") {
+  if (!quoteView || quoteView.quote.status === "trashed") {
     notFound()
   }
+
+  const { quote, salesProfile } = quoteView
 
   return (
     <DashboardShell
@@ -49,7 +51,7 @@ export default async function QuotePreviewPage({
       }
     >
       {saved ? <ToastOnMount message="Quote saved." /> : null}
-      <QuotePreview quote={quote} />
+      <QuotePreview quote={quote} salesProfile={salesProfile} />
     </DashboardShell>
   )
 }

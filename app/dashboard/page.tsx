@@ -9,16 +9,20 @@ import { buttonVariants } from "@/components/ui/button"
 import { requireSession } from "@/lib/auth"
 import { formatDateLabel } from "@/lib/quotes/format"
 import { getQuoteStore } from "@/lib/quotes/store"
+import { getSalesProfileStore, isSalesProfileComplete } from "@/lib/sales-profiles/store"
 
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ search?: string; trashed?: string; error?: string }>
+  searchParams: Promise<{ search?: string; trashed?: string; error?: string; profile?: string }>
 }) {
   const session = await requireSession()
   const params = await searchParams
   const search = params.search ?? ""
   const store = getQuoteStore()
+  const profileStore = getSalesProfileStore()
+  const profile = await profileStore.getProfile(session)
+  const profileComplete = isSalesProfileComplete(profile)
   const quotes = await store.listQuotes(session, search)
 
   return (
@@ -29,6 +33,7 @@ export default async function DashboardPage({
       actions={
         <>
           <form action={createQuoteAction}>
+            <input type="hidden" name="redirectTo" value="/dashboard" />
             <SubmitButton
               size="lg"
               pendingText="Creating…"
@@ -42,6 +47,24 @@ export default async function DashboardPage({
     >
       {params.trashed ? <ToastOnMount message="Quote moved to trash." /> : null}
       {params.error ? <ToastOnMount message={params.error} type="error" /> : null}
+      {params.profile ? <ToastOnMount message="Sales profile saved." /> : null}
+
+      {!profileComplete ? (
+        <section className="mb-6 rounded-[2rem] border border-[#d7c796] bg-[#fff8e8] p-5 shadow-[0_18px_45px_rgba(48,32,20,0.06)]">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-[#8d7441]">Creator contact required</p>
+              <h2 className="mt-2 font-serif text-3xl text-stone-900">Finish your sales profile before creating quotes</h2>
+              <p className="mt-2 max-w-2xl text-sm leading-7 text-stone-600">
+                Reserve-now and WhatsApp CTAs now use the quote creator&apos;s direct contact details.
+              </p>
+            </div>
+            <Link href="/settings/profile" className={buttonVariants({ variant: "default" })}>
+              Complete profile
+            </Link>
+          </div>
+        </section>
+      ) : null}
 
       <section className="rounded-[2rem] border border-stone-200 bg-white/85 p-5 shadow-[0_18px_45px_rgba(48,32,20,0.06)]">
         <form className="flex flex-col gap-3 md:flex-row">

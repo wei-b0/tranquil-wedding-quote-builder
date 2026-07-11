@@ -9,6 +9,7 @@ export const quotePayloadSchema = z.object({
   expiresAt: z.string().nullable(),
   createdAt: z.string().min(1),
   updatedAt: z.string().min(1),
+  creatorUserId: z.string(),
   ownerEmail: z.string().email(),
   clientName: z.string(),
   partnerName: z.string(),

@@ -33,6 +33,9 @@ export function DashboardShell({
               <Link href="/dashboard" className="text-sm text-stone-600 transition hover:text-stone-900">
                 Dashboard
               </Link>
+              <Link href="/settings/profile" className="text-sm text-stone-600 transition hover:text-stone-900">
+                Profile
+              </Link>
               <Link href="/trash" className="text-sm text-stone-600 transition hover:text-stone-900">
                 Trashbox
               </Link>

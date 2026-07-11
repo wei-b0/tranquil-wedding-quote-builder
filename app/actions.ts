@@ -7,11 +7,25 @@ import { requireSession } from "@/lib/auth"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { quotePayloadSchema } from "@/lib/quotes/schema"
 import { getQuoteStore, setQuoteStatus } from "@/lib/quotes/store"
+import { buildSalesProfileDraft, getSalesProfileStore, isSalesProfileComplete } from "@/lib/sales-profiles/store"
+import type { SalesProfile } from "@/lib/quotes/types"
 
 function parsePayload(formData: FormData) {
   const raw = String(formData.get("payload") ?? "")
   const parsed = JSON.parse(raw)
   return quotePayloadSchema.parse(parsed)
+}
+
+function parseSalesProfile(formData: FormData, userId: string): SalesProfile {
+  return {
+    userId,
+    displayName: String(formData.get("displayName") ?? "").trim(),
+    title: String(formData.get("title") ?? "").trim(),
+    email: String(formData.get("email") ?? "").trim(),
+    phone: String(formData.get("phone") ?? "").trim(),
+    whatsapp: String(formData.get("whatsapp") ?? "").trim(),
+    avatarUrl: String(formData.get("avatarUrl") ?? "").trim() || null,
+  }
 }
 
 export async function loginAction(formData: FormData) {
@@ -39,8 +53,16 @@ export async function logoutAction() {
 }
 
 export async function createQuoteAction(formData: FormData) {
-  void formData
   const session = await requireSession()
+  const redirectTo = String(formData.get("redirectTo") ?? "/dashboard")
+  const nextPath = redirectTo.includes("?") ? `${redirectTo}&profile=1` : `${redirectTo}?profile=1`
+  const profileStore = getSalesProfileStore()
+  const profile = await profileStore.getProfile(session)
+
+  if (!isSalesProfileComplete(profile)) {
+    redirect(`/settings/profile?required=1&next=${encodeURIComponent(nextPath)}`)
+  }
+
   const store = getQuoteStore()
   const quote = await store.createQuote(session)
   redirect(`/quotes/${quote.id}/edit`)
@@ -107,4 +129,22 @@ export async function deleteQuotePermanentlyAction(formData: FormData) {
     revalidatePath(`/q/${quote.slug}`)
   }
   redirect("/trash?deleted=1")
+}
+
+export async function saveSalesProfileAction(formData: FormData) {
+  const session = await requireSession()
+  const next = String(formData.get("next") ?? "").trim()
+  const profileStore = getSalesProfileStore()
+  const fallback = buildSalesProfileDraft(session, await profileStore.getProfile(session))
+  const profile = parseSalesProfile(formData, session.userId)
+  await profileStore.upsertProfile(session, {
+    ...fallback,
+    ...profile,
+    email: profile.email || fallback.email,
+    phone: profile.phone || fallback.phone,
+  })
+
+  revalidatePath("/dashboard")
+  revalidatePath("/settings/profile")
+  redirect(next || "/settings/profile?saved=1")
 }

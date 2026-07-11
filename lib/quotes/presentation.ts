@@ -1,7 +1,8 @@
 import fs from "node:fs"
 import path from "node:path"
 
-import type { QuoteEvent, QuoteRecord } from "@/lib/quotes/types"
+import type { QuoteEvent, QuoteRecord, SalesProfile } from "@/lib/quotes/types"
+import { quoteHeadline } from "@/lib/quotes/format"
 
 export const quoteTheme = {
   colors: {
@@ -213,6 +214,38 @@ export function getQuoteSummaryRows(quote: QuoteRecord) {
 
 export function getQuoteWhatsAppHref(value: string) {
   return `https://wa.me/${value.replace(/[^\d]/g, "")}`
+}
+
+export function getQuoteWhatsAppMessageHref(value: string, message: string) {
+  const phone = value.replace(/[^\d]/g, "")
+  const query = new URLSearchParams({ text: message })
+  return `https://wa.me/${phone}?${query.toString()}`
+}
+
+export function getQuoteReserveMessage(quote: QuoteRecord) {
+  return `We'd like to reserve our date for ${quoteHeadline(quote)}. Please guide us with the next step.`
+}
+
+export function getQuoteDiscussionMessage(quote: QuoteRecord) {
+  return `We reviewed the quotation for ${quoteHeadline(quote)} and want to discuss the package.`
+}
+
+export function getSalesProfileRoleLine(profile: SalesProfile | null) {
+  const title = profile?.title.trim() || "Wedding Consultant"
+  return `${title} @ The Tranquil Wedding`
+}
+
+export function getSalesProfileInitials(profile: SalesProfile | null) {
+  const name = profile?.displayName.trim()
+  if (!name) {
+    return "TTW"
+  }
+
+  const tokens = name.split(/\s+/).filter(Boolean)
+  return tokens
+    .slice(0, 2)
+    .map((token) => token[0]?.toUpperCase() ?? "")
+    .join("")
 }
 
 export function splitList(items: string[], size: number) {
