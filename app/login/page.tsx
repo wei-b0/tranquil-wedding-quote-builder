@@ -13,34 +13,49 @@ export default async function LoginPage({
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(244,201,147,0.35),transparent_28%),linear-gradient(180deg,#2a1a13_0%,#6c4831_48%,#f7efe4_100%)] px-4 py-10">
       <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[1.1fr_0.9fr]">
         <section className="rounded-[2.5rem] border border-white/10 bg-white/10 p-8 text-white shadow-[0_30px_80px_rgba(24,13,7,0.28)] backdrop-blur">
-          <p className="text-xs uppercase tracking-[0.35em] text-amber-100">The Tranquil Wedding</p>
+          <p className="text-xs tracking-[0.35em] text-amber-100 uppercase">
+            The Tranquil Wedding
+          </p>
           <h1 className="mt-4 max-w-xl font-serif text-5xl leading-tight">
-            Build premium wedding quotations without editing documents manually.
+            Build premium wedding quotes and invoices without editing documents
+            manually.
           </h1>
           <p className="mt-5 max-w-2xl text-sm leading-8 text-stone-100">
-            Create a structured quote, present three strong package options with the center package highlighted,
-            publish a client-ready share page, and export a polished PDF from the same quote.
+            Create structured quotations, generate matching invoices, publish a
+            client-ready quote share page, and export polished PDFs from the
+            same internal workspace.
           </p>
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             <div className="rounded-[1.6rem] border border-white/10 bg-white/10 p-4">
               <p className="text-sm font-medium">Dashboard</p>
-              <p className="mt-2 text-sm text-stone-200">Search, duplicate, delete, restore, and manage quotes.</p>
+              <p className="mt-2 text-sm text-stone-200">
+                Move between quotes, invoices, trash, and profile from one
+                shell.
+              </p>
             </div>
             <div className="rounded-[1.6rem] border border-white/10 bg-white/10 p-4">
               <p className="text-sm font-medium">Builder</p>
-              <p className="mt-2 text-sm text-stone-200">Edit schedule, packages, deliverables, and terms.</p>
+              <p className="mt-2 text-sm text-stone-200">
+                Edit quote story sections or invoice installment schedules live.
+              </p>
             </div>
             <div className="rounded-[1.6rem] border border-white/10 bg-white/10 p-4">
               <p className="text-sm font-medium">Share + PDF</p>
-              <p className="mt-2 text-sm text-stone-200">Send a public link or download a branded proposal.</p>
+              <p className="mt-2 text-sm text-stone-200">
+                Send a public quote link or export branded quote and invoice
+                PDFs.
+              </p>
             </div>
           </div>
         </section>
 
         <section className="rounded-[2.5rem] border border-stone-200 bg-[#fffdf9] p-8 shadow-[0_30px_80px_rgba(24,13,7,0.16)]">
-          <h2 className="font-serif text-3xl text-stone-900">Sales team sign in</h2>
+          <h2 className="font-serif text-3xl text-stone-900">
+            Sales team sign in
+          </h2>
           <p className="mt-3 text-sm leading-7 text-stone-600">
-            Sign in with your team account. Contact your admin if you need access.
+            Sign in with your team account. Contact your admin if you need
+            access.
           </p>
 
           {error ? (
@@ -58,7 +73,7 @@ export default async function LoginPage({
                 name="email"
                 type="email"
                 required
-                className="rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-900 outline-none transition focus:border-amber-500"
+                className="rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-900 transition outline-none focus:border-amber-500"
                 placeholder="sales@thetranquilwedding.com"
               />
             </label>
@@ -68,7 +83,7 @@ export default async function LoginPage({
                 name="password"
                 type="password"
                 required
-                className="rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-900 outline-none transition focus:border-amber-500"
+                className="rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-900 transition outline-none focus:border-amber-500"
                 placeholder="••••••••"
               />
             </label>
@@ -77,7 +92,7 @@ export default async function LoginPage({
               pendingText="Signing in…"
               className="mt-2 h-12 rounded-full bg-stone-900 px-6 text-white hover:bg-stone-800"
             >
-              Enter quote builder
+              Enter document builder
             </SubmitButton>
           </form>
         </section>

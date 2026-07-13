@@ -2,14 +2,14 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 
 import { DashboardShell } from "@/components/dashboard-shell"
+import { InvoicePreview } from "@/components/invoice-preview"
 import { PdfExportLink } from "@/components/pdf-export-link"
-import { QuotePreview } from "@/components/quote-preview"
 import { ToastOnMount } from "@/components/toast-on-mount"
 import { buttonVariants } from "@/components/ui/button"
 import { requireSession } from "@/lib/auth"
-import { getQuoteStore } from "@/lib/quotes/store"
+import { getInvoiceStore } from "@/lib/invoices/store"
 
-export default async function QuotePreviewPage({
+export default async function InvoicePreviewPage({
   params,
   searchParams,
 }: {
@@ -19,38 +19,31 @@ export default async function QuotePreviewPage({
   const session = await requireSession()
   const { id } = await params
   const { saved } = await searchParams
-  const store = getQuoteStore()
-  const quoteView = await store.getQuoteViewById(session, id)
+  const store = getInvoiceStore()
+  const invoiceView = await store.getInvoiceViewById(session, id)
 
-  if (!quoteView || quoteView.quote.status === "trashed") {
+  if (!invoiceView || invoiceView.invoice.status === "trashed") {
     notFound()
   }
 
-  const { quote, salesProfile } = quoteView
+  const { invoice } = invoiceView
 
   return (
     <DashboardShell
       session={session}
-      title="Quotation Preview"
-      subtitle="Review the same presentation the client will see before sharing the link or exporting the PDF."
-      activeSection="quotes"
+      title="Invoice Preview"
+      subtitle="Review the invoice layout before exporting the PDF or returning to the editor."
+      activeSection="invoices"
       actions={
         <>
           <Link
-            href={`/quotes/${quote.id}/edit`}
+            href={`/invoices/${invoice.id}/edit`}
             className={buttonVariants({ variant: "outline" })}
           >
             Back to editor
           </Link>
-          <a
-            href={`/q/${quote.slug}`}
-            target="_blank"
-            className={buttonVariants({ variant: "outline" })}
-          >
-            Open public page
-          </a>
           <PdfExportLink
-            href={`/api/quotes/${quote.id}/pdf`}
+            href={`/api/invoices/${invoice.id}/pdf`}
             className={buttonVariants({
               variant: "default",
               className: "hover:text-primary-foreground",
@@ -61,8 +54,10 @@ export default async function QuotePreviewPage({
         </>
       }
     >
-      {saved ? <ToastOnMount message="Quote saved." /> : null}
-      <QuotePreview quote={quote} salesProfile={salesProfile} />
+      {saved ? <ToastOnMount message="Invoice saved." /> : null}
+      <div className="mx-auto max-w-6xl">
+        <InvoicePreview invoice={invoice} className="rounded-[2rem]" />
+      </div>
     </DashboardShell>
   )
 }

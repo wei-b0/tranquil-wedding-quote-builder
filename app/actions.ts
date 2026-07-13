@@ -4,16 +4,28 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 
 import { requireSession } from "@/lib/auth"
+import { invoicePayloadSchema } from "@/lib/invoices/schema"
+import { getInvoiceStore, setInvoiceStatus } from "@/lib/invoices/store"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { quotePayloadSchema } from "@/lib/quotes/schema"
 import { getQuoteStore, setQuoteStatus } from "@/lib/quotes/store"
-import { buildSalesProfileDraft, getSalesProfileStore, isSalesProfileComplete } from "@/lib/sales-profiles/store"
+import {
+  buildSalesProfileDraft,
+  getSalesProfileStore,
+  isSalesProfileComplete,
+} from "@/lib/sales-profiles/store"
 import type { SalesProfile } from "@/lib/quotes/types"
 
 function parsePayload(formData: FormData) {
   const raw = String(formData.get("payload") ?? "")
   const parsed = JSON.parse(raw)
   return quotePayloadSchema.parse(parsed)
+}
+
+function parseInvoicePayload(formData: FormData) {
+  const raw = String(formData.get("payload") ?? "")
+  const parsed = JSON.parse(raw)
+  return invoicePayloadSchema.parse(parsed)
 }
 
 function parseSalesProfile(formData: FormData, userId: string): SalesProfile {
@@ -29,11 +41,15 @@ function parseSalesProfile(formData: FormData, userId: string): SalesProfile {
 }
 
 export async function loginAction(formData: FormData) {
-  const email = String(formData.get("email") ?? "").trim().toLowerCase()
+  const email = String(formData.get("email") ?? "")
+    .trim()
+    .toLowerCase()
   const password = String(formData.get("password") ?? "")
 
   if (!email || !password) {
-    redirect(`/login?error=${encodeURIComponent("Email and password are required.")}`)
+    redirect(
+      `/login?error=${encodeURIComponent("Email and password are required.")}`
+    )
   }
 
   const supabase = await createSupabaseServerClient()
@@ -55,17 +71,28 @@ export async function logoutAction() {
 export async function createQuoteAction(formData: FormData) {
   const session = await requireSession()
   const redirectTo = String(formData.get("redirectTo") ?? "/dashboard")
-  const nextPath = redirectTo.includes("?") ? `${redirectTo}&profile=1` : `${redirectTo}?profile=1`
+  const nextPath = redirectTo.includes("?")
+    ? `${redirectTo}&profile=1`
+    : `${redirectTo}?profile=1`
   const profileStore = getSalesProfileStore()
   const profile = await profileStore.getProfile(session)
 
   if (!isSalesProfileComplete(profile)) {
-    redirect(`/settings/profile?required=1&next=${encodeURIComponent(nextPath)}`)
+    redirect(
+      `/settings/profile?required=1&next=${encodeURIComponent(nextPath)}`
+    )
   }
 
   const store = getQuoteStore()
   const quote = await store.createQuote(session)
   redirect(`/quotes/${quote.id}/edit`)
+}
+
+export async function createInvoiceAction() {
+  const session = await requireSession()
+  const store = getInvoiceStore()
+  const invoice = await store.createInvoice(session)
+  redirect(`/invoices/${invoice.id}/edit`)
 }
 
 export async function saveQuoteAction(formData: FormData) {
@@ -79,7 +106,11 @@ export async function saveQuoteAction(formData: FormData) {
   revalidatePath(`/quotes/${saved.id}`)
   revalidatePath(`/quotes/${saved.id}/edit`)
   revalidatePath(`/q/${saved.slug}`)
-  redirect(intent === "preview" ? `/quotes/${saved.id}?saved=1` : `/quotes/${saved.id}/edit?saved=1`)
+  redirect(
+    intent === "preview"
+      ? `/quotes/${saved.id}?saved=1`
+      : `/quotes/${saved.id}/edit?saved=1`
+  )
 }
 
 export async function duplicateQuoteAction(formData: FormData) {
@@ -94,6 +125,25 @@ export async function duplicateQuoteAction(formData: FormData) {
   redirect(`/quotes/${duplicated.id}/edit`)
 }
 
+export async function saveInvoiceAction(formData: FormData) {
+  const session = await requireSession()
+  const store = getInvoiceStore()
+  const invoice = parseInvoicePayload(formData)
+  const intent = String(formData.get("intent") ?? "draft")
+  const saved = await store.saveInvoice(
+    session,
+    setInvoiceStatus(invoice, invoice.status)
+  )
+  revalidatePath("/invoices")
+  revalidatePath(`/invoices/${saved.id}`)
+  revalidatePath(`/invoices/${saved.id}/edit`)
+  redirect(
+    intent === "preview"
+      ? `/invoices/${saved.id}?saved=1`
+      : `/invoices/${saved.id}/edit?saved=1`
+  )
+}
+
 export async function trashQuoteAction(formData: FormData) {
   const session = await requireSession()
   const id = String(formData.get("id") ?? "")
@@ -102,6 +152,16 @@ export async function trashQuoteAction(formData: FormData) {
   revalidatePath("/dashboard")
   revalidatePath("/trash")
   redirect("/dashboard?trashed=1")
+}
+
+export async function trashInvoiceAction(formData: FormData) {
+  const session = await requireSession()
+  const id = String(formData.get("id") ?? "")
+  const store = getInvoiceStore()
+  await store.trashInvoice(session, id)
+  revalidatePath("/invoices")
+  revalidatePath("/trash")
+  redirect("/invoices?trashed=1")
 }
 
 export async function restoreQuoteAction(formData: FormData) {
@@ -114,6 +174,16 @@ export async function restoreQuoteAction(formData: FormData) {
   if (quote) {
     revalidatePath(`/q/${quote.slug}`)
   }
+  redirect("/trash?restored=1")
+}
+
+export async function restoreInvoiceAction(formData: FormData) {
+  const session = await requireSession()
+  const id = String(formData.get("id") ?? "")
+  const store = getInvoiceStore()
+  await store.restoreInvoice(session, id)
+  revalidatePath("/invoices")
+  revalidatePath("/trash")
   redirect("/trash?restored=1")
 }
 
@@ -131,11 +201,24 @@ export async function deleteQuotePermanentlyAction(formData: FormData) {
   redirect("/trash?deleted=1")
 }
 
+export async function deleteInvoicePermanentlyAction(formData: FormData) {
+  const session = await requireSession()
+  const id = String(formData.get("id") ?? "")
+  const store = getInvoiceStore()
+  await store.deleteInvoicePermanently(session, id)
+  revalidatePath("/invoices")
+  revalidatePath("/trash")
+  redirect("/trash?deleted=1")
+}
+
 export async function saveSalesProfileAction(formData: FormData) {
   const session = await requireSession()
   const next = String(formData.get("next") ?? "").trim()
   const profileStore = getSalesProfileStore()
-  const fallback = buildSalesProfileDraft(session, await profileStore.getProfile(session))
+  const fallback = buildSalesProfileDraft(
+    session,
+    await profileStore.getProfile(session)
+  )
   const profile = parseSalesProfile(formData, session.userId)
   await profileStore.upsertProfile(session, {
     ...fallback,

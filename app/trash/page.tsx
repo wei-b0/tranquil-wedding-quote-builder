@@ -1,11 +1,17 @@
 import Link from "next/link"
 
-import { deleteQuotePermanentlyAction, restoreQuoteAction } from "@/app/actions"
+import {
+  deleteInvoicePermanentlyAction,
+  deleteQuotePermanentlyAction,
+  restoreInvoiceAction,
+  restoreQuoteAction,
+} from "@/app/actions"
 import { DashboardShell } from "@/components/dashboard-shell"
 import { SubmitButton } from "@/components/submit-button"
 import { ToastOnMount } from "@/components/toast-on-mount"
 import { buttonVariants } from "@/components/ui/button"
 import { requireSession } from "@/lib/auth"
+import { getInvoiceStore } from "@/lib/invoices/store"
 import { formatDateLabel } from "@/lib/quotes/format"
 import { getQuoteStore } from "@/lib/quotes/store"
 
@@ -21,43 +27,59 @@ function getDaysUntilExpiry(value: string | null) {
 export default async function TrashPage({
   searchParams,
 }: {
-  searchParams: Promise<{ search?: string; restored?: string; deleted?: string }>
+  searchParams: Promise<{
+    search?: string
+    restored?: string
+    deleted?: string
+  }>
 }) {
   const session = await requireSession()
   const params = await searchParams
   const search = params.search ?? ""
-  const store = getQuoteStore()
-  const quotes = await store.listTrash(session, search)
+  const quoteStore = getQuoteStore()
+  const invoiceStore = getInvoiceStore()
+  const [quotes, invoices] = await Promise.all([
+    quoteStore.listTrash(session, search),
+    invoiceStore.listTrash(session, search),
+  ])
 
   return (
     <DashboardShell
       session={session}
       title="Trashbox"
-      subtitle="Restore deleted quotations before they expire, or remove them permanently."
-      actions={
-        <Link href="/dashboard" className={buttonVariants({ variant: "primary" })}>
-          Back to dashboard
-        </Link>
-      }
+      subtitle="Restore deleted quotations and invoices before they expire, or remove them permanently."
+      activeSection="trash"
     >
-      {params.restored ? <ToastOnMount message="Quote restored." /> : null}
-      {params.deleted ? <ToastOnMount message="Quote permanently deleted." /> : null}
+      {params.restored ? <ToastOnMount message="Document restored." /> : null}
+      {params.deleted ? (
+        <ToastOnMount message="Document permanently deleted." />
+      ) : null}
 
       <section className="rounded-[2rem] border border-stone-200 bg-white/85 p-5 shadow-[0_18px_45px_rgba(48,32,20,0.06)]">
         <form className="flex flex-col gap-3 md:flex-row">
           <input
             name="search"
             defaultValue={search}
-            className="h-12 flex-1 rounded-full border border-stone-200 bg-stone-50 px-5 text-sm text-stone-900 outline-none transition focus:border-amber-500"
+            className="h-12 flex-1 rounded-full border border-stone-200 bg-stone-50 px-5 text-sm text-stone-900 transition outline-none focus:border-amber-500"
             placeholder="Search deleted client, title, location, or status"
           />
-          <SubmitButton variant="outline" size="lg" pendingText="Searching…" className="h-12 rounded-full px-5">
+          <SubmitButton
+            variant="outline"
+            size="lg"
+            pendingText="Searching…"
+            className="h-12 rounded-full px-5"
+          >
             Search
           </SubmitButton>
         </form>
       </section>
 
       <section className="mt-6 grid gap-4">
+        {quotes.length ? (
+          <div className="text-xs tracking-[0.3em] text-stone-500 uppercase">
+            Quotations
+          </div>
+        ) : null}
         {quotes.length ? (
           quotes.map((quote) => {
             const daysUntilExpiry = getDaysUntilExpiry(quote.expiresAt)
@@ -70,22 +92,29 @@ export default async function TrashPage({
                 <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
                   <div className="space-y-3">
                     <div className="flex flex-wrap items-center gap-3">
-                      <span className="rounded-full bg-stone-100 px-3 py-1 text-[0.68rem] uppercase tracking-[0.24em] text-stone-600">
+                      <span className="rounded-full bg-stone-100 px-3 py-1 text-[0.68rem] tracking-[0.24em] text-stone-600 uppercase">
                         trashed
                       </span>
                       <span className="text-sm text-stone-500">
-                        Deleted {formatDateLabel(quote.trashedAt || quote.updatedAt)}
+                        Deleted{" "}
+                        {formatDateLabel(quote.trashedAt || quote.updatedAt)}
                       </span>
                       <span className="text-sm text-stone-500">
-                        Auto deletes {quote.expiresAt ? formatDateLabel(quote.expiresAt) : "soon"}
+                        Auto deletes{" "}
+                        {quote.expiresAt
+                          ? formatDateLabel(quote.expiresAt)
+                          : "soon"}
                       </span>
                     </div>
                     <div>
                       <h2 className="font-serif text-3xl text-stone-900">
-                        {[quote.clientName, quote.partnerName].filter(Boolean).join(" & ") || "Untitled couple"}
+                        {[quote.clientName, quote.partnerName]
+                          .filter(Boolean)
+                          .join(" & ") || "Untitled couple"}
                       </h2>
                       <p className="mt-2 text-sm leading-7 text-stone-600">
-                        {quote.quoteTitle} · {quote.location || "Location to be updated"}
+                        {quote.quoteTitle} ·{" "}
+                        {quote.location || "Location to be updated"}
                       </p>
                     </div>
                     <div className="text-sm text-stone-500">
@@ -107,7 +136,10 @@ export default async function TrashPage({
                     </Link>
                     <form action={restoreQuoteAction}>
                       <input type="hidden" name="id" value={quote.id} />
-                      <SubmitButton variant="secondary" pendingText="Restoring…">
+                      <SubmitButton
+                        variant="secondary"
+                        pendingText="Restoring…"
+                      >
                         Restore
                       </SubmitButton>
                     </form>
@@ -123,13 +155,87 @@ export default async function TrashPage({
             )
           })
         ) : (
+          <></>
+        )}
+
+        {invoices.length ? (
+          <div className="mt-2 text-xs tracking-[0.3em] text-stone-500 uppercase">
+            Invoices
+          </div>
+        ) : null}
+        {invoices.map((invoice) => {
+          const daysUntilExpiry = getDaysUntilExpiry(invoice.expiresAt)
+
+          return (
+            <article
+              key={invoice.id}
+              className="rounded-[2rem] border border-stone-200 bg-white/85 p-5 shadow-[0_18px_45px_rgba(48,32,20,0.06)]"
+            >
+              <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+                <div className="space-y-3">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="rounded-full bg-stone-100 px-3 py-1 text-[0.68rem] tracking-[0.24em] text-stone-600 uppercase">
+                      trashed
+                    </span>
+                    <span className="text-sm text-stone-500">
+                      Deleted{" "}
+                      {formatDateLabel(invoice.trashedAt || invoice.updatedAt)}
+                    </span>
+                    <span className="text-sm text-stone-500">
+                      Auto deletes{" "}
+                      {invoice.expiresAt
+                        ? formatDateLabel(invoice.expiresAt)
+                        : "soon"}
+                    </span>
+                  </div>
+                  <div>
+                    <h2 className="font-serif text-3xl text-stone-900">
+                      {invoice.clientName || "Untitled client"}
+                    </h2>
+                    <p className="mt-2 text-sm leading-7 text-stone-600">
+                      {invoice.invoiceTitle} ·{" "}
+                      {formatDateLabel(invoice.invoiceDate)}
+                    </p>
+                  </div>
+                  <div className="text-sm text-stone-500">
+                    {daysUntilExpiry === null
+                      ? "Expiry pending"
+                      : daysUntilExpiry === 0
+                        ? "Expires today"
+                        : `${daysUntilExpiry} day${daysUntilExpiry === 1 ? "" : "s"} remaining`}
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-3">
+                  <form action={restoreInvoiceAction}>
+                    <input type="hidden" name="id" value={invoice.id} />
+                    <SubmitButton variant="secondary" pendingText="Restoring…">
+                      Restore
+                    </SubmitButton>
+                  </form>
+                  <form action={deleteInvoicePermanentlyAction}>
+                    <input type="hidden" name="id" value={invoice.id} />
+                    <SubmitButton variant="ghost" pendingText="Deleting…">
+                      Delete permanently
+                    </SubmitButton>
+                  </form>
+                </div>
+              </div>
+            </article>
+          )
+        })}
+
+        {!quotes.length && !invoices.length ? (
           <div className="rounded-[2rem] border border-dashed border-stone-300 bg-white/70 p-12 text-center">
-            <h2 className="font-serif text-3xl text-stone-900">Trashbox is empty</h2>
+            <h2 className="font-serif text-3xl text-stone-900">
+              Trashbox is empty
+            </h2>
             <p className="mt-3 text-sm leading-7 text-stone-600">
-              Deleted quotations will appear here for 30 days before they are removed automatically.
+              Deleted quotations and invoices will appear here for 30 days
+              before they are removed automatically.
             </p>
           </div>
-        )}
+        ) : null}
       </section>
     </DashboardShell>
   )
