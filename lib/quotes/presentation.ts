@@ -1,36 +1,23 @@
 import fs from "node:fs"
 import path from "node:path"
 
-import type { QuoteEvent, QuoteRecord, SalesProfile } from "@/lib/quotes/types"
-import { quoteHeadline } from "@/lib/quotes/format"
-
-export const quoteTheme = {
-  colors: {
-    forest: "#1C352D",
-    forestSoft: "#294A3F",
-    sage: "#A6B28B",
-    blush: "#F5C9B0",
-    ivory: "#F9F6F3",
-    white: "#FFFFFF",
-    text: "#26302B",
-    supportText: "#58635D",
-    mutedText: "#7A847E",
-    line: "rgba(28, 53, 45, 0.14)",
-    lineStrong: "#B9C2A8",
-    surface: "#FFFDFC",
-    surfaceSoft: "#F3EEE7",
-  },
-  typography: {
-    display: "var(--font-quote-display)",
-    body: "var(--font-quote-body)",
-    accent: "var(--font-quote-accent)",
-  },
-  spacing: {
-    outerRadius: "2rem",
-    sectionRadius: "1.4rem",
-    cardRadius: "1rem",
-  },
-}
+import type { QuoteEvent, QuoteRecord } from "@/lib/quotes/types"
+export {
+  getEventImageObjectPosition,
+  getPackageDeliverables,
+  getQuoteCoverageStats,
+  getQuoteCoverageSummary,
+  getQuoteDiscussionMessage,
+  getQuotePackageCoverageNote,
+  getQuoteReserveMessage,
+  getQuoteSummaryRows,
+  getQuoteWhatsAppHref,
+  getQuoteWhatsAppMessageHref,
+  getSalesProfileInitials,
+  getSalesProfileRoleLine,
+  quoteTheme,
+  splitList,
+} from "@/lib/quotes/presentation-shared"
 
 function picsum(seed: string, width: number, height: number) {
   return `https://picsum.photos/seed/${seed}/${width}/${height}`
@@ -185,81 +172,8 @@ export const quoteImageConfig = {
   ],
 }
 
-function normalizeText(value: string) {
-  return value.trim().toLowerCase()
-}
-
-export function getQuoteSummaryRows(quote: QuoteRecord) {
-  return [
-    {
-      label: "Clients",
-      value:
-        [quote.clientName, quote.partnerName].filter(Boolean).join(" & ") ||
-        "To be updated",
-    },
-    {
-      label: "Location",
-      value: quote.location || "Location to be updated",
-    },
-    {
-      label: "Coverage",
-      value: quote.coverage || "Both sides",
-    },
-    {
-      label: "Event Window",
-      value: quote.eventRangeLabel || "Custom schedule",
-    },
-  ]
-}
-
-export function getQuoteWhatsAppHref(value: string) {
-  return `https://wa.me/${value.replace(/[^\d]/g, "")}`
-}
-
-export function getQuoteWhatsAppMessageHref(value: string, message: string) {
-  const phone = value.replace(/[^\d]/g, "")
-  const query = new URLSearchParams({ text: message })
-  return `https://wa.me/${phone}?${query.toString()}`
-}
-
-export function getQuoteReserveMessage(quote: QuoteRecord) {
-  return `We'd like to reserve our date for ${quoteHeadline(quote)}. Please guide us with the next step.`
-}
-
-export function getQuoteDiscussionMessage(quote: QuoteRecord) {
-  return `We reviewed the quotation for ${quoteHeadline(quote)} and want to discuss the package.`
-}
-
-export function getSalesProfileRoleLine(profile: SalesProfile | null) {
-  const title = profile?.title.trim() || "Wedding Consultant"
-  return `${title} @ The Tranquil Wedding`
-}
-
-export function getSalesProfileInitials(profile: SalesProfile | null) {
-  const name = profile?.displayName.trim()
-  if (!name) {
-    return "TTW"
-  }
-
-  const tokens = name.split(/\s+/).filter(Boolean)
-  return tokens
-    .slice(0, 2)
-    .map((token) => token[0]?.toUpperCase() ?? "")
-    .join("")
-}
-
-export function splitList(items: string[], size: number) {
-  const groups: string[][] = []
-
-  for (let index = 0; index < items.length; index += size) {
-    groups.push(items.slice(index, index + size))
-  }
-
-  return groups
-}
-
 export function getEventImage(event: QuoteEvent, index: number) {
-  const title = normalizeText(event.title)
+  const title = event.title.trim().toLowerCase()
   const matched = quoteImageConfig.eventKeywordSeeds.find((entry) =>
     entry.keywords.some((keyword) => title.includes(keyword))
   )
@@ -269,16 +183,6 @@ export function getEventImage(event: QuoteEvent, index: number) {
   }
 
   return quoteImageConfig.gallery[index % quoteImageConfig.gallery.length]
-}
-
-export function getEventImageObjectPosition(event: QuoteEvent) {
-  const title = normalizeText(event.title)
-
-  if (["haldi", "maiyaa", "maiya"].some((keyword) => title.includes(keyword))) {
-    return "78% 28%"
-  }
-
-  return "50% 50%"
 }
 
 export function getQuoteImageSlots(quote: QuoteRecord) {
@@ -292,9 +196,7 @@ export function getQuoteImageSlots(quote: QuoteRecord) {
     coverDetail: quoteImageConfig.coverDetail,
     about: quoteImageConfig.about,
     packageHero: quoteImageConfig.packageHero,
-    preWedding: quote.includePreWedding
-      ? quoteImageConfig.preWedding
-      : quoteImageConfig.preWedding,
+    preWedding: quoteImageConfig.preWedding,
     closing: quoteImageConfig.closing,
     gallery: quoteImageConfig.gallery,
     eventImages,

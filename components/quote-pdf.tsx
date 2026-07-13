@@ -16,10 +16,13 @@ import {
   computePackagePricing,
   formatCurrency,
   formatDateLabel,
+  formatTeamLabel,
   quoteHeadline,
 } from "@/lib/quotes/format"
 import {
+  getPackageDeliverables,
   getQuoteImageSlots,
+  getQuotePackageCoverageNote,
   getSalesProfileInitials,
   getSalesProfileRoleLine,
   getQuoteSummaryRows,
@@ -117,6 +120,9 @@ const styles = StyleSheet.create({
   chapterPageBody: {
     paddingTop: 56,
   },
+  compactChapterPageBody: {
+    paddingTop: 34,
+  },
   centeredPageBody: {
     flexGrow: 1,
     justifyContent: "center",
@@ -194,7 +200,8 @@ const styles = StyleSheet.create({
     backgroundColor: quoteTheme.colors.forest,
   },
   summaryCell: {
-    width: "33.333%",
+    flexGrow: 1,
+    flexBasis: 0,
     paddingVertical: 15,
     paddingHorizontal: 10,
     alignItems: "center",
@@ -439,12 +446,46 @@ const styles = StyleSheet.create({
   preWeddingCopy: {
     width: "48%",
   },
+  preWeddingTop: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+  },
   preWeddingDate: {
     marginBottom: 10,
     fontSize: 6.7,
     letterSpacing: 1.5,
     textTransform: "uppercase",
     color: quoteTheme.colors.sage,
+  },
+  preWeddingStamp: {
+    width: 76,
+    minHeight: 76,
+    marginTop: -2,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: quoteTheme.colors.blush,
+    backgroundColor: "rgba(245,201,176,0.08)",
+    alignItems: "center",
+    justifyContent: "center",
+    transform: "rotate(-8deg)",
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+  },
+  preWeddingStampLabel: {
+    fontSize: 5.4,
+    letterSpacing: 1,
+    textTransform: "uppercase",
+    color: "#9b7c63",
+    textAlign: "center",
+  },
+  preWeddingStampValue: {
+    marginTop: 3,
+    fontFamily: "QuoteDisplay",
+    fontWeight: 700,
+    fontSize: 14,
+    color: quoteTheme.colors.forest,
+    textAlign: "center",
   },
   preWeddingVisual: {
     width: "47%",
@@ -476,24 +517,36 @@ const styles = StyleSheet.create({
   },
 
   packageHero: {
-    marginTop: 18,
+    marginTop: 14,
     width: "100%",
-    height: 112,
+    height: 108,
     objectFit: "cover",
     borderRadius: 2,
   },
+  packageCoverageNote: {
+    marginTop: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: pdfLineColor,
+    backgroundColor: quoteTheme.colors.surfaceSoft,
+    fontSize: 7.8,
+    lineHeight: 1.35,
+    color: quoteTheme.colors.supportText,
+    textAlign: "center",
+  },
   packageGrid: {
-    marginTop: 14,
+    marginTop: 10,
     flexDirection: "row",
     justifyContent: "space-between",
   },
   packageCard: {
     width: "31.7%",
     backgroundColor: quoteTheme.colors.white,
-    paddingTop: 14,
-    paddingRight: 14,
-    paddingBottom: 16,
-    paddingLeft: 14,
+    paddingTop: 12,
+    paddingRight: 12,
+    paddingBottom: 12,
+    paddingLeft: 12,
     borderRadius: 14,
     borderWidth: 1,
     borderColor: pdfLineColor,
@@ -538,14 +591,14 @@ const styles = StyleSheet.create({
     color: quoteTheme.colors.ivory,
   },
   packageSubtitle: {
-    marginTop: 5,
-    fontSize: 5.9,
-    lineHeight: 1.28,
+    marginTop: 4,
+    fontSize: 5.4,
+    lineHeight: 1.2,
     color: quoteTheme.colors.supportText,
   },
   packagePriceBox: {
-    marginTop: 10,
-    paddingVertical: 10,
+    marginTop: 8,
+    paddingVertical: 8,
     paddingHorizontal: 8,
     backgroundColor: quoteTheme.colors.ivory,
     borderRadius: 12,
@@ -571,33 +624,33 @@ const styles = StyleSheet.create({
     marginTop: 2,
     fontFamily: "QuoteDisplay",
     fontWeight: 700,
-    fontSize: 17,
+    fontSize: 15.5,
     textAlign: "center",
     color: quoteTheme.colors.forest,
   },
   packageTeamWrap: {
-    marginTop: 10,
+    marginTop: 8,
     flexDirection: "row",
     flexWrap: "wrap",
   },
   packageLine: {
     flexDirection: "row",
-    paddingBottom: 6,
-    marginBottom: 6,
+    paddingBottom: 4,
+    marginBottom: 4,
     borderBottomWidth: 1,
     borderBottomColor: pdfLightDivider,
   },
   packageLineText: {
     flex: 1,
-    fontSize: 5.9,
-    lineHeight: 1.25,
+    fontSize: 5.4,
+    lineHeight: 1.18,
     color: quoteTheme.colors.supportText,
   },
   featureBox: {
-    marginTop: 10,
-    paddingTop: 8,
+    marginTop: 8,
+    paddingTop: 7,
     paddingRight: 8,
-    paddingBottom: 8,
+    paddingBottom: 7,
     paddingLeft: 8,
     backgroundColor: quoteTheme.colors.ivory,
     borderRadius: 12,
@@ -612,14 +665,50 @@ const styles = StyleSheet.create({
   },
   featureText: {
     marginTop: 4,
-    fontSize: 5.7,
-    lineHeight: 1.24,
+    fontSize: 5.4,
+    lineHeight: 1.16,
     color: quoteTheme.colors.supportText,
   },
 
   stackedInfo: {
     marginTop: 24,
     gap: 16,
+  },
+  deliverablePackageGrid: {
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  deliverablePackageCard: {
+    width: "31.7%",
+    backgroundColor: quoteTheme.colors.white,
+    padding: 18,
+    borderRadius: 2,
+    borderWidth: 1,
+    borderColor: pdfLineColor,
+  },
+  deliverablePackageCardFeatured: {
+    backgroundColor: quoteTheme.colors.surfaceSoft,
+    borderColor: pdfLineColorStrong,
+  },
+  deliverablePackageLabel: {
+    fontSize: 6.2,
+    letterSpacing: 1.2,
+    textTransform: "uppercase",
+    color: quoteTheme.colors.sage,
+  },
+  deliverablePackageTitle: {
+    marginTop: 5,
+    fontFamily: "QuoteDisplay",
+    fontWeight: 700,
+    fontSize: 16,
+    color: quoteTheme.colors.forest,
+  },
+  deliverablePackageSubtitle: {
+    marginTop: 6,
+    fontSize: 7.1,
+    lineHeight: 1.45,
+    color: quoteTheme.colors.supportText,
   },
   infoBlock: {
     width: "100%",
@@ -680,6 +769,30 @@ const styles = StyleSheet.create({
     fontSize: 7.3,
     lineHeight: 1.42,
     color: "rgba(249,246,243,0.78)",
+  },
+  paymentPageCard: {
+    marginTop: 24,
+    backgroundColor: quoteTheme.colors.forest,
+    padding: 28,
+    borderRadius: 2,
+  },
+  paymentTravelNote: {
+    marginTop: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    backgroundColor: "rgba(249,246,243,0.08)",
+  },
+  paymentTravelNoteLabel: {
+    fontSize: 6.6,
+    letterSpacing: 1.2,
+    textTransform: "uppercase",
+    color: quoteTheme.colors.sage,
+  },
+  paymentTravelNoteText: {
+    marginTop: 5,
+    fontSize: 7.4,
+    lineHeight: 1.45,
+    color: "rgba(249,246,243,0.82)",
   },
 
   numberGrid: {
@@ -750,38 +863,34 @@ const styles = StyleSheet.create({
     color: "rgba(249,246,243,0.8)",
   },
   closingProfileCard: {
-    marginTop: 20,
+    marginTop: 16,
     flexDirection: "row",
     alignItems: "center",
-    gap: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    gap: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     backgroundColor: "rgba(249,246,243,0.08)",
-    borderWidth: 1,
-    borderColor: "rgba(249,246,243,0.14)",
   },
   closingAvatar: {
-    width: 44,
-    height: 44,
+    width: 38,
+    height: 38,
     borderRadius: 999,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "rgba(249,246,243,0.14)",
-    borderWidth: 1,
-    borderColor: quoteTheme.colors.sage,
   },
   closingAvatarText: {
-    fontSize: 12,
+    fontSize: 10.5,
     color: quoteTheme.colors.blush,
   },
   closingProfileName: {
     fontFamily: "QuoteDisplay",
-    fontSize: 18,
+    fontSize: 16,
     color: quoteTheme.colors.ivory,
   },
   closingProfileTitle: {
     marginTop: 2,
-    fontSize: 8,
+    fontSize: 7.3,
     color: "rgba(249,246,243,0.74)",
   },
   contactGrid: {
@@ -1004,7 +1113,7 @@ function PackageCard({ pkg }: { pkg: QuotePackage }) {
       <View style={styles.packageTeamWrap}>
         {pkg.team.map((member) => (
           <Text key={member} style={styles.teamTag}>
-            {member}
+            {formatTeamLabel(member)}
           </Text>
         ))}
       </View>
@@ -1083,12 +1192,12 @@ export function buildQuotePdfDocument(
         </View>
 
         <View style={styles.summaryStrip}>
-          {summaryRows.slice(0, 3).map((row, index) => (
+          {summaryRows.map((row, index) => (
             <View
               key={row.label}
               style={[
                 styles.summaryCell,
-                ...(index === 2 ? [styles.summaryCellLast] : []),
+                ...(index === summaryRows.length - 1 ? [styles.summaryCellLast] : []),
               ]}
             >
               <Text style={styles.summaryLabel}>{row.label}</Text>
@@ -1162,9 +1271,16 @@ export function buildQuotePdfDocument(
             />
             <View style={styles.preWeddingShell}>
               <View style={styles.preWeddingCopy}>
-                <Text style={styles.preWeddingDate}>
-                  {quote.preWeddingDate ? formatDateLabel(quote.preWeddingDate) : "Date to be decided"}
-                </Text>
+                <View style={styles.preWeddingTop}>
+                  <Text style={styles.preWeddingDate}>
+                    {quote.preWeddingDate ? formatDateLabel(quote.preWeddingDate) : "Date to be decided"}
+                  </Text>
+                  <View style={styles.preWeddingStamp}>
+                    <Text style={styles.preWeddingStampValue}>
+                      ₹ {quote.preWeddingPriceLabel || "Priced separately"}
+                    </Text>
+                  </View>
+                </View>
                 <BulletList items={quote.preWeddingDeliverables} />
                 <View style={styles.teamRow}>
                   {quote.preWeddingTeam.map((member) => (
@@ -1186,7 +1302,7 @@ export function buildQuotePdfDocument(
       ) : null}
 
       <Page size="A4" style={styles.page}>
-        <View style={styles.chapterPageBody}>
+        <View style={styles.compactChapterPageBody}>
           <SectionHead
             kicker="Package comparison"
             title="Compare your options side by side"
@@ -1195,6 +1311,9 @@ export function buildQuotePdfDocument(
             src={pdfImageSource(imageSlots.packageHero)}
             style={styles.packageHero}
           />
+          <Text style={styles.packageCoverageNote}>
+            {getQuotePackageCoverageNote(quote)}
+          </Text>
           <View style={styles.packageGrid} wrap={false}>
             {quote.packages.map((pkg) => (
               <PackageCard key={pkg.id} pkg={pkg} />
@@ -1207,35 +1326,72 @@ export function buildQuotePdfDocument(
         <View style={styles.chapterPageBody}>
           <SectionHead
             kicker="Deliverables"
-            title="Coverage, promises and booking structure"
+            title="Package-wise deliverables and booking structure"
           />
           <View style={styles.stackedInfo}>
             <View style={styles.infoBlock}>
-              <View style={styles.infoCard}>
-                <Text style={styles.cardTitle}>Deliverables</Text>
-                <View style={{ marginTop: 10 }}>
-                  <BulletList items={quote.deliverables} />
-                </View>
-              </View>
-            </View>
-            <View style={styles.infoBlock}>
-              <View style={[styles.infoCard, styles.darkCard]}>
-                <Text style={[styles.cardTitle, styles.cardTitleDark]}>
-                  Payment milestones
-                </Text>
-                {quote.paymentTerms.map((term, index) => (
-                  <View key={term.id} style={styles.paymentItem}>
-                    <Text style={styles.paymentPct}>{term.percentage}%</Text>
-                    <View style={styles.paymentBody}>
-                      <Text style={styles.paymentLabel}>
-                        Milestone {index + 1}
-                      </Text>
-                      <Text style={styles.paymentName}>{term.label}</Text>
-                      <Text style={styles.paymentText}>{term.description}</Text>
+              <View style={styles.deliverablePackageGrid} wrap={false}>
+                {quote.packages.map((pkg) => (
+                  <View
+                    key={pkg.id}
+                    style={[
+                      styles.deliverablePackageCard,
+                      ...(pkg.recommended
+                        ? [styles.deliverablePackageCardFeatured]
+                        : []),
+                    ]}
+                  >
+                    <Text style={styles.deliverablePackageLabel}>
+                      {pkg.recommended
+                        ? "Recommended collection"
+                        : "Collection details"}
+                    </Text>
+                    <Text style={styles.deliverablePackageTitle}>
+                      {pkg.name}
+                    </Text>
+                    <Text style={styles.deliverablePackageSubtitle}>
+                      {pkg.subtitle}
+                    </Text>
+                    <View style={{ marginTop: 10 }}>
+                      <BulletList items={getPackageDeliverables(pkg)} />
                     </View>
                   </View>
                 ))}
               </View>
+            </View>
+          </View>
+        </View>
+      </Page>
+
+      <Page size="A4" style={styles.page}>
+        <View style={styles.chapterPageBody}>
+          <SectionHead
+            kicker="Payments"
+            title="Payment milestones"
+          />
+          <View style={styles.paymentPageCard} wrap={false}>
+            {quote.paymentTerms.map((term, index) => (
+              <View key={term.id} style={styles.paymentItem}>
+                <Text style={styles.paymentPct}>{term.percentage}%</Text>
+                <View style={styles.paymentBody}>
+                  <Text style={styles.paymentLabel}>
+                    Milestone {index + 1}
+                  </Text>
+                  <Text style={styles.paymentName}>{term.label}</Text>
+                  <Text style={styles.paymentText}>{term.description}</Text>
+                </View>
+              </View>
+            ))}
+            <View style={styles.paymentTravelNote}>
+              <Text style={styles.paymentTravelNoteLabel}>
+                Travel and stay
+              </Text>
+              <Text style={styles.paymentTravelNoteText}>
+                For celebrations taking place outside Delhi NCR, comfortable
+                travel and stay arrangements for the coverage team are to be
+                arranged by the client so the crew can deliver the experience
+                smoothly across all scheduled events.
+              </Text>
             </View>
           </View>
         </View>

@@ -76,3 +76,20 @@ export function syncPackagePricing<T extends QuotePackage>(pkg: T): T {
     finalPrice: pricing.finalPrice,
   }
 }
+
+export function formatTeamLabel(value: string) {
+  const trimmed = value.trim()
+  if (!trimmed) return trimmed
+
+  const withoutCount = trimmed.replace(/^\d+\s+/, "")
+
+  if (withoutCount.endsWith("s")) {
+    return withoutCount
+  }
+
+  if (withoutCount.endsWith("y")) {
+    return `${withoutCount.slice(0, -1)}ies`
+  }
+
+  return `${withoutCount}s`
+}

@@ -202,6 +202,11 @@ export function normalizeQuote(input: QuoteRecord): QuoteRecord {
       Array.isArray(input.privacyPolicy) && input.privacyPolicy.length
         ? input.privacyPolicy.filter(Boolean)
         : fallback.privacyPolicy,
+    preWeddingPriceLabel:
+      typeof (input as { preWeddingPriceLabel?: unknown }).preWeddingPriceLabel === "string" &&
+      (input as { preWeddingPriceLabel?: string }).preWeddingPriceLabel
+        ? (input as { preWeddingPriceLabel: string }).preWeddingPriceLabel
+        : fallback.preWeddingPriceLabel,
     preWeddingTeam:
       Array.isArray(input.preWeddingTeam) && input.preWeddingTeam.length
         ? input.preWeddingTeam.filter(Boolean).map(normalizeLegacyRoleLabel)

@@ -10,6 +10,7 @@ import { ToastOnMount } from "@/components/toast-on-mount"
 import { Button } from "@/components/ui/button"
 import { applyCoverageDefaults } from "@/lib/quotes/defaults"
 import { syncPackagePricing } from "@/lib/quotes/format"
+import { getQuoteCoverageSummary } from "@/lib/quotes/presentation-shared"
 import type { QuotePackage, QuoteRecord } from "@/lib/quotes/types"
 
 type QuoteEditorProps = {
@@ -45,6 +46,7 @@ const packageInclusionPresets = [
   "60-second teaser in 24 hours",
   "Highlight film",
   "Full wedding film",
+  "Drone coverage",
   "4 to 5 reels",
   "AI face scanner",
   "E-invite video",
@@ -297,6 +299,9 @@ function PackageCard({
   onChange: (nextPackage: QuotePackage) => void
 }) {
   const pricingPreview = syncPackagePricing(pkg)
+  const [isTeamOpen, setIsTeamOpen] = useState(false)
+  const [isDeliverablesOpen, setIsDeliverablesOpen] = useState(false)
+  const [isSpecialFeaturesOpen, setIsSpecialFeaturesOpen] = useState(false)
 
   return (
     <div className="rounded-[1.55rem] border border-[#ddd7cc] bg-[#fbf9f4] p-4">
@@ -361,27 +366,126 @@ function PackageCard({
       </div>
 
       <div className="mt-4 grid gap-4">
-        <RowsEditor
-          label="Team"
-          values={pkg.team}
-          onChange={(team) => onChange({ ...pkg, team })}
-          presets={teamPresets}
-          addLabel="Add team member"
-        />
-        <RowsEditor
-          label="Inclusions"
-          values={pkg.items}
-          onChange={(items) => onChange({ ...pkg, items })}
-          presets={packageInclusionPresets}
-          addLabel="Add inclusion"
-        />
-        <RowsEditor
-          label="Special features"
-          values={pkg.specialFeatures}
-          onChange={(specialFeatures) => onChange({ ...pkg, specialFeatures })}
-          presets={specialFeaturePresets}
-          addLabel="Add feature"
-        />
+        <div className="rounded-[1.35rem] border border-[#ddd7cc] bg-white px-4 py-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <div className="text-sm font-medium text-[#39362f]">Team</div>
+              <div className="mt-1 text-xs uppercase tracking-[0.14em] text-[#857a63]">
+                {pkg.team.length} role{pkg.team.length === 1 ? "" : "s"}
+              </div>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              className="hover:text-[#39362f]"
+              onClick={() => setIsTeamOpen((current) => !current)}
+            >
+              {isTeamOpen ? "Close" : "Edit"}
+            </Button>
+          </div>
+          {isTeamOpen ? (
+            <div className="mt-4">
+              <RowsEditor
+                label="Team"
+                values={pkg.team}
+                onChange={(team) => onChange({ ...pkg, team })}
+                presets={teamPresets}
+                addLabel="Add team member"
+              />
+            </div>
+          ) : (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {pkg.team.map((member) => (
+                <span
+                  key={`${pkg.id}-${member}`}
+                  className="rounded-full border border-[#d7e1d3] bg-[#f5faf3] px-3 py-1 text-xs font-medium tracking-[0.04em] text-[#5d6d58]"
+                >
+                  {member}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="rounded-[1.35rem] border border-[#ddd7cc] bg-white px-4 py-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <div className="text-sm font-medium text-[#39362f]">Package deliverables</div>
+              <div className="mt-1 text-xs uppercase tracking-[0.14em] text-[#857a63]">
+                {pkg.items.length} inclusion{pkg.items.length === 1 ? "" : "s"}
+              </div>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              className="hover:text-[#39362f]"
+              onClick={() => setIsDeliverablesOpen((current) => !current)}
+            >
+              {isDeliverablesOpen ? "Close" : "Edit"}
+            </Button>
+          </div>
+          {isDeliverablesOpen ? (
+            <div className="mt-4">
+              <RowsEditor
+                label="Package deliverables"
+                values={pkg.items}
+                onChange={(items) => onChange({ ...pkg, items })}
+                presets={packageInclusionPresets}
+                addLabel="Add inclusion"
+              />
+            </div>
+          ) : (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {pkg.items.map((item) => (
+                <span
+                  key={`${pkg.id}-${item}`}
+                  className="rounded-full border border-[#d7e1d3] bg-[#f5faf3] px-3 py-1 text-xs font-medium tracking-[0.04em] text-[#5d6d58]"
+                >
+                  {item}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="rounded-[1.35rem] border border-[#ddd7cc] bg-white px-4 py-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <div className="text-sm font-medium text-[#39362f]">Special features</div>
+              <div className="mt-1 text-xs uppercase tracking-[0.14em] text-[#857a63]">
+                {pkg.specialFeatures.length} feature{pkg.specialFeatures.length === 1 ? "" : "s"}
+              </div>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              className="hover:text-[#39362f]"
+              onClick={() => setIsSpecialFeaturesOpen((current) => !current)}
+            >
+              {isSpecialFeaturesOpen ? "Close" : "Edit"}
+            </Button>
+          </div>
+          {isSpecialFeaturesOpen ? (
+            <div className="mt-4">
+              <RowsEditor
+                label="Special features"
+                values={pkg.specialFeatures}
+                onChange={(specialFeatures) => onChange({ ...pkg, specialFeatures })}
+                presets={specialFeaturePresets}
+                addLabel="Add feature"
+              />
+            </div>
+          ) : (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {pkg.specialFeatures.map((item) => (
+                <span
+                  key={`${pkg.id}-${item}`}
+                  className="rounded-full border border-[#d7e1d3] bg-[#f5faf3] px-3 py-1 text-xs font-medium tracking-[0.04em] text-[#5d6d58]"
+                >
+                  {item}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
@@ -439,11 +543,15 @@ function SaveActions({
 export function QuoteEditor({ initialQuote, saveAction }: QuoteEditorProps) {
   const [quote, setQuote] = useState<QuoteRecord>(initialQuote)
   const [intent, setIntent] = useState<"draft" | "share" | "preview">("draft")
+  const [isAboutSectionOpen, setIsAboutSectionOpen] = useState(false)
+  const [isPreWeddingTeamOpen, setIsPreWeddingTeamOpen] = useState(false)
+  const [isPreWeddingDeliverablesOpen, setIsPreWeddingDeliverablesOpen] = useState(false)
   const [isLegalSectionOpen, setIsLegalSectionOpen] = useState(false)
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [showSavedToast] = useState(
     () => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("saved") === "1"
   )
+  const coverageSummary = getQuoteCoverageSummary(quote)
 
   return (
     <div>
@@ -490,7 +598,7 @@ export function QuoteEditor({ initialQuote, saveAction }: QuoteEditorProps) {
                 onChange={(event) => setQuote((current) => syncPrimaryLocation(current, event.target.value))}
               />
             </Field>
-            <Field label="Event window label">
+            <Field label="Date range label (optional)">
               <input
                 className={inputClassName()}
                 value={quote.eventRangeLabel}
@@ -499,17 +607,49 @@ export function QuoteEditor({ initialQuote, saveAction }: QuoteEditorProps) {
               />
             </Field>
           </div>
-          <div className="mt-4 grid gap-4">
-            <Field label="About title">
-              <input className={inputClassName()} value={quote.aboutTitle} onChange={(event) => setQuote((current) => ({ ...current, aboutTitle: event.target.value }))} />
-            </Field>
-            <Field label="About section">
-              <textarea
-                className={`${inputClassName()} min-h-32`}
-                value={quote.aboutBody}
-                onChange={(event) => setQuote((current) => ({ ...current, aboutBody: event.target.value }))}
-              />
-            </Field>
+          <div className="mt-4 rounded-[1.35rem] border border-[#d7e1d3] bg-[#f5faf3] px-5 py-4">
+            <p className="text-xs uppercase tracking-[0.24em] text-[#6f7f68]">Coverage summary</p>
+            <p className="mt-2 font-serif text-2xl text-[#2f3c33]">{coverageSummary}</p>
+            <p className="mt-2 text-sm leading-7 text-[#5e6b60]">
+              Day count is derived automatically from the unique event dates you enter below.
+            </p>
+          </div>
+          <div className="mt-4 rounded-[1.35rem] border border-[#ddd7cc] bg-[#f9f7f2] px-4 py-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <div className="text-sm font-medium text-[#39362f]">Studio introduction</div>
+                <div className="mt-1 text-xs uppercase tracking-[0.14em] text-[#857a63]">
+                  About title and about section
+                </div>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                className="hover:text-[#39362f]"
+                onClick={() => setIsAboutSectionOpen((current) => !current)}
+              >
+                {isAboutSectionOpen ? "Close" : "Edit"}
+              </Button>
+            </div>
+            {isAboutSectionOpen ? (
+              <div className="mt-4 grid gap-4">
+                <Field label="About title">
+                  <input className={inputClassName()} value={quote.aboutTitle} onChange={(event) => setQuote((current) => ({ ...current, aboutTitle: event.target.value }))} />
+                </Field>
+                <Field label="About section">
+                  <textarea
+                    className={`${inputClassName()} min-h-32`}
+                    value={quote.aboutBody}
+                    onChange={(event) => setQuote((current) => ({ ...current, aboutBody: event.target.value }))}
+                  />
+                </Field>
+              </div>
+            ) : (
+              <div className="mt-4 rounded-[1.2rem] border border-[#ebe4d8] bg-white px-4 py-4">
+                <p className="text-xs uppercase tracking-[0.16em] text-[#857a63]">{quote.aboutTitle}</p>
+                <p className="mt-2 line-clamp-3 text-sm leading-7 text-[#5e5a54]">{quote.aboutBody}</p>
+              </div>
+            )}
           </div>
         </section>
 
@@ -702,7 +842,7 @@ export function QuoteEditor({ initialQuote, saveAction }: QuoteEditorProps) {
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-xs uppercase tracking-[0.3em] text-[#7b776f]">Prewedding</p>
-              <h2 className="mt-2 font-serif text-2xl text-[#39362f]">Optional add-on coverage</h2>
+              <h2 className="mt-2 font-serif text-2xl text-[#39362f]">Include Pre-Wedding Shoot</h2>
             </div>
             <label className="flex items-center gap-2 text-sm text-[#5e5a54]">
               <input
@@ -718,6 +858,14 @@ export function QuoteEditor({ initialQuote, saveAction }: QuoteEditorProps) {
               <Field label="Section title">
                 <input className={inputClassName()} value={quote.preWeddingLabel} onChange={(event) => setQuote((current) => ({ ...current, preWeddingLabel: event.target.value }))} />
               </Field>
+              <Field label="Price">
+                <input
+                  className={inputClassName()}
+                  value={quote.preWeddingPriceLabel}
+                  onChange={(event) => setQuote((current) => ({ ...current, preWeddingPriceLabel: event.target.value }))}
+                  placeholder="Priced separately"
+                />
+              </Field>
               <Field label="Date">
                 <input
                   type="date"
@@ -726,20 +874,86 @@ export function QuoteEditor({ initialQuote, saveAction }: QuoteEditorProps) {
                   onChange={(event) => setQuote((current) => ({ ...current, preWeddingDate: event.target.value }))}
                 />
               </Field>
-              <RowsEditor
-                label="Prewedding team"
-                values={quote.preWeddingTeam}
-                onChange={(preWeddingTeam) => setQuote((current) => ({ ...current, preWeddingTeam }))}
-                presets={teamPresets}
-                addLabel="Add team member"
-              />
-              <RowsEditor
-                label="Prewedding deliverables"
-                values={quote.preWeddingDeliverables}
-                onChange={(preWeddingDeliverables) => setQuote((current) => ({ ...current, preWeddingDeliverables }))}
-                presets={deliverablePresets}
-                addLabel="Add deliverable"
-              />
+              <div className="rounded-[1.35rem] border border-[#ddd7cc] bg-[#f9f7f2] px-4 py-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-medium text-[#39362f]">Prewedding team</div>
+                    <div className="mt-1 text-xs uppercase tracking-[0.14em] text-[#857a63]">
+                      {quote.preWeddingTeam.length} role{quote.preWeddingTeam.length === 1 ? "" : "s"}
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="hover:text-[#39362f]"
+                    onClick={() => setIsPreWeddingTeamOpen((current) => !current)}
+                  >
+                    {isPreWeddingTeamOpen ? "Close" : "Edit"}
+                  </Button>
+                </div>
+                {isPreWeddingTeamOpen ? (
+                  <div className="mt-4">
+                    <RowsEditor
+                      label="Prewedding team"
+                      values={quote.preWeddingTeam}
+                      onChange={(preWeddingTeam) => setQuote((current) => ({ ...current, preWeddingTeam }))}
+                      presets={teamPresets}
+                      addLabel="Add team member"
+                    />
+                  </div>
+                ) : (
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {quote.preWeddingTeam.map((member) => (
+                      <span
+                        key={member}
+                        className="rounded-full border border-[#d7e1d3] bg-[#f5faf3] px-3 py-1 text-xs font-medium tracking-[0.04em] text-[#5d6d58]"
+                      >
+                        {member}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="rounded-[1.35rem] border border-[#ddd7cc] bg-[#f9f7f2] px-4 py-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-medium text-[#39362f]">Prewedding deliverables</div>
+                    <div className="mt-1 text-xs uppercase tracking-[0.14em] text-[#857a63]">
+                      {quote.preWeddingDeliverables.length} item{quote.preWeddingDeliverables.length === 1 ? "" : "s"}
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="hover:text-[#39362f]"
+                    onClick={() => setIsPreWeddingDeliverablesOpen((current) => !current)}
+                  >
+                    {isPreWeddingDeliverablesOpen ? "Close" : "Edit"}
+                  </Button>
+                </div>
+                {isPreWeddingDeliverablesOpen ? (
+                  <div className="mt-4">
+                    <RowsEditor
+                      label="Prewedding deliverables"
+                      values={quote.preWeddingDeliverables}
+                      onChange={(preWeddingDeliverables) => setQuote((current) => ({ ...current, preWeddingDeliverables }))}
+                      presets={deliverablePresets}
+                      addLabel="Add deliverable"
+                    />
+                  </div>
+                ) : (
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {quote.preWeddingDeliverables.map((item) => (
+                      <span
+                        key={item}
+                        className="rounded-full border border-[#d7e1d3] bg-[#f5faf3] px-3 py-1 text-xs font-medium tracking-[0.04em] text-[#5d6d58]"
+                      >
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           ) : null}
         </section>
@@ -765,15 +979,11 @@ export function QuoteEditor({ initialQuote, saveAction }: QuoteEditorProps) {
 
         <section className={sectionCardClassName()}>
           <p className="text-xs uppercase tracking-[0.3em] text-[#7b776f]">Deliverables & Payments</p>
-          <h2 className="mt-2 font-serif text-2xl text-[#39362f]">Keep the standard promise easy to revise</h2>
+          <h2 className="mt-2 font-serif text-2xl text-[#39362f]">Package deliverables live above, payment flow stays here</h2>
           <div className="mt-5 grid gap-5">
-            <RowsEditor
-              label="Quote deliverables"
-              values={quote.deliverables}
-              onChange={(deliverables) => setQuote((current) => ({ ...current, deliverables }))}
-              presets={deliverablePresets}
-              addLabel="Add deliverable"
-            />
+            <div className="rounded-[1.35rem] border border-[#ddd7cc] bg-[#f9f7f2] px-4 py-4 text-sm leading-7 text-[#5e5a54]">
+              Each package now carries its own deliverables. Update Classic, Signature, and Luxury in the Packages section above, and the preview, share page, and PDF will reflect those package-specific promises automatically.
+            </div>
             <div className="grid gap-4">
               <div className="flex items-center justify-between gap-3">
                 <span className="text-sm font-medium text-[#39362f]">Payment schedule</span>

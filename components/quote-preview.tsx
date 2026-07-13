@@ -4,10 +4,13 @@ import {
   computePackagePricing,
   formatCurrency,
   formatDateLabel,
+  formatTeamLabel,
 } from "@/lib/quotes/format"
 import {
   getQuoteImageSlots,
+  getPackageDeliverables,
   getEventImageObjectPosition,
+  getQuotePackageCoverageNote,
   getQuoteSummaryRows,
   getQuoteWhatsAppMessageHref,
   getSalesProfileInitials,
@@ -163,7 +166,7 @@ function PackageCard({
               color: quoteTheme.colors.forestSoft,
             }}
           >
-            {member}
+            {formatTeamLabel(member)}
           </span>
         ))}
       </div>
@@ -215,9 +218,9 @@ export function QuotePreview({ quote, salesProfile = null, publicView = false }:
   const summaryRows = getQuoteSummaryRows(quote)
   const whatsappHref = salesProfile?.whatsapp
     ? getQuoteWhatsAppMessageHref(
-        salesProfile.whatsapp,
-        `We reviewed the quotation for ${[quote.clientName, quote.partnerName].filter(Boolean).join(" & ") || quote.quoteTitle} and want to connect.`
-      )
+      salesProfile.whatsapp,
+      `We reviewed the quotation for ${[quote.clientName, quote.partnerName].filter(Boolean).join(" & ") || quote.quoteTitle} and want to connect.`
+    )
     : null
   const initials = getSalesProfileInitials(salesProfile)
 
@@ -292,13 +295,14 @@ export function QuotePreview({ quote, salesProfile = null, publicView = false }:
       </div>
 
       <section
-        className="grid md:grid-cols-3"
+        className="grid"
         style={{
+          gridTemplateColumns: `repeat(${summaryRows.length}, minmax(0, 1fr))`,
           backgroundColor: quoteTheme.colors.forest,
           color: quoteTheme.colors.ivory,
         }}
       >
-        {summaryRows.slice(0, 3).map((row, index) => (
+        {summaryRows.map((row, index) => (
           <div
             key={row.label}
             className="px-6 py-7 text-center md:px-8"
@@ -588,17 +592,50 @@ export function QuotePreview({ quote, salesProfile = null, publicView = false }:
               title={quote.preWeddingLabel || "Pre wedding editorial"}
             />
             <div
-              className="grid gap-8 rounded-[0.2rem] border bg-white p-6 xl:grid-cols-[1.05fr_0.95fr] xl:items-center"
+              className="grid gap-8 rounded-[0.2rem] border bg-white p-6 xl:grid-cols-[0.98fr_1.02fr] xl:items-center"
               style={{ borderColor: quoteTheme.colors.line }}
             >
-              <div>
-                <p
-                  className="text-[0.68rem] tracking-[0.22em] uppercase"
-                  style={{ color: quoteTheme.colors.sage }}
-                >
-                  {quote.preWeddingDate ? formatDateLabel(quote.preWeddingDate) : "Date to be decided"}
-                </p>
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-[0.2rem] border bg-[#fcfaf6] p-6" style={{ borderColor: quoteTheme.colors.line }}>
+                <div className="grid gap-4 sm:grid-cols-[1fr_170px]">
+                  <div
+                    className="rounded-[0.2rem] border px-5 py-5"
+                    style={{
+                      borderColor: quoteTheme.colors.line,
+                      backgroundColor: quoteTheme.colors.white,
+                    }}
+                  >
+                    <div>
+                      <p
+                        className="mt-3 font-serif text-3xl leading-none"
+                        style={{ color: quoteTheme.colors.forest }}
+                      >
+                        {quote.preWeddingDate ? formatDateLabel(quote.preWeddingDate) : "Date to be decided"}
+                      </p>
+                      <p
+                        className="mt-3 text-sm leading-7"
+                        style={{ color: quoteTheme.colors.supportText }}
+                      >
+                        A dedicated couple shoot designed for announcement, countdown, and story-led social edits.
+                      </p>
+                    </div>
+                  </div>
+                  <div
+                    className="flex min-h-[10.5rem] items-center justify-center rounded-[0.2rem] border px-5 py-5 text-center"
+                    style={{
+                      borderColor: quoteTheme.colors.blush,
+                      color: quoteTheme.colors.forest,
+                      background:
+                        "linear-gradient(180deg, rgba(245,201,176,0.14), rgba(245,201,176,0.04))",
+                    }}
+                  >
+                    <div>
+                      <p className="mt-2 font-serif text-4xl leading-none">
+                        ₹ {quote.preWeddingPriceLabel || "Priced separately"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-6 grid gap-3">
                   {quote.preWeddingDeliverables.map((item) => (
                     <div
                       key={item}
@@ -629,7 +666,7 @@ export function QuotePreview({ quote, salesProfile = null, publicView = false }:
                   ))}
                 </div>
               </div>
-              <div className="relative h-[22rem] overflow-hidden rounded-[0.2rem] md:h-[28rem]">
+              <div className="relative h-[24rem] overflow-hidden rounded-[0.2rem] md:h-[32rem]">
                 <Image
                   src={imageSlots.preWedding}
                   alt="Pre wedding placeholder"
@@ -646,6 +683,16 @@ export function QuotePreview({ quote, salesProfile = null, publicView = false }:
             kicker="Package comparison"
             title="Compare your options side by side"
           />
+          <div
+            className="mt-6 rounded-[0.2rem] border px-5 py-4 text-center"
+            style={{
+              borderColor: quoteTheme.colors.line,
+              backgroundColor: quoteTheme.colors.surfaceSoft,
+              color: quoteTheme.colors.supportText,
+            }}
+          >
+            {getQuotePackageCoverageNote(quote)}
+          </div>
           <div className="relative h-[18rem] overflow-hidden rounded-[0.2rem] md:h-[22rem]">
             <Image
               src={imageSlots.packageHero}
@@ -668,34 +715,62 @@ export function QuotePreview({ quote, salesProfile = null, publicView = false }:
         <section className="mt-20">
           <SectionHead
             kicker="Deliverables"
-            title="Coverage, promises and booking structure"
+            title="Package-wise deliverables and booking structure"
           />
           <div className="space-y-6">
-            <div
-              className="rounded-[0.2rem] border bg-white p-8"
-              style={{ borderColor: quoteTheme.colors.line }}
-            >
-              <h3
-                className="font-serif text-3xl"
-                style={{ color: quoteTheme.colors.forest }}
-              >
-                What&apos;s included
-              </h3>
-              <div className="mt-5 space-y-3">
-                {quote.deliverables.map((item) => (
+            <div className="grid gap-6 xl:grid-cols-3 xl:items-stretch">
+              {quote.packages.map((pkg) => {
+                const deliverables = getPackageDeliverables(pkg)
+
+                return (
                   <div
-                    key={item}
-                    className="flex gap-3 border-b pb-3 text-sm"
+                    key={pkg.id}
+                    className="rounded-[0.2rem] border p-8"
                     style={{
-                      borderColor: quoteTheme.colors.line,
-                      color: quoteTheme.colors.supportText,
+                      borderColor: pkg.recommended
+                        ? quoteTheme.colors.lineStrong
+                        : quoteTheme.colors.line,
+                      backgroundColor: pkg.recommended
+                        ? quoteTheme.colors.surfaceSoft
+                        : quoteTheme.colors.white,
                     }}
                   >
-                    <span style={{ color: quoteTheme.colors.sage }}>✦</span>
-                    <span className="leading-6">{item}</span>
+                    <p
+                      className="text-[0.68rem] tracking-[0.24em] uppercase"
+                      style={{ color: quoteTheme.colors.sage }}
+                    >
+                      {pkg.recommended ? "Recommended collection" : "Collection details"}
+                    </p>
+                    <h3
+                      className="mt-2 font-serif text-3xl"
+                      style={{ color: quoteTheme.colors.forest }}
+                    >
+                      {pkg.name}
+                    </h3>
+                    <p
+                      className="mt-3 text-sm leading-7"
+                      style={{ color: quoteTheme.colors.supportText }}
+                    >
+                      {pkg.subtitle}
+                    </p>
+                    <div className="mt-5 space-y-3">
+                      {deliverables.map((item) => (
+                        <div
+                          key={`${pkg.id}-${item}`}
+                          className="flex gap-3 border-b pb-3 text-sm"
+                          style={{
+                            borderColor: quoteTheme.colors.line,
+                            color: quoteTheme.colors.supportText,
+                          }}
+                        >
+                          <span style={{ color: quoteTheme.colors.sage }}>✦</span>
+                          <span className="leading-6">{item}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                ))}
-              </div>
+                )
+              })}
             </div>
 
             <div
@@ -736,6 +811,26 @@ export function QuotePreview({ quote, salesProfile = null, publicView = false }:
                     </div>
                   </div>
                 ))}
+              </div>
+              <div
+                className="mt-6 rounded-[0.2rem] px-5 py-4"
+                style={{ backgroundColor: "rgba(249,246,243,0.08)" }}
+              >
+                <p
+                  className="text-[0.68rem] tracking-[0.18em] uppercase"
+                  style={{ color: quoteTheme.colors.sage }}
+                >
+                  Travel and stay
+                </p>
+                <p
+                  className="mt-2 text-sm leading-7"
+                  style={{ color: "rgba(249,246,243,0.82)" }}
+                >
+                  For celebrations taking place outside Delhi NCR, comfortable
+                  travel and stay arrangements for the coverage team are to be
+                  arranged by the client so the crew can deliver the experience
+                  smoothly across all scheduled events.
+                </p>
               </div>
             </div>
           </div>
