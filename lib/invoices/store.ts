@@ -5,6 +5,7 @@ import type {
   InvoiceFooterContact,
   InvoiceInstallmentRow,
   InvoiceListItem,
+  InvoicePaymentMilestone,
   InvoiceRecord,
   InvoiceSignatory,
   InvoiceStatus,
@@ -13,6 +14,7 @@ import type {
 } from "@/lib/invoices/types"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import type { QuoteSession } from "@/lib/quotes/types"
+import { parseAmount } from "@/lib/quotes/format"
 
 type InvoiceStore = {
   listInvoices(
@@ -107,6 +109,21 @@ function normalizeBankDetails(
   }
 }
 
+function normalizePaymentTerm(
+  input: Partial<InvoicePaymentMilestone> | undefined,
+  fallback: InvoicePaymentMilestone
+): InvoicePaymentMilestone {
+  return {
+    id: input?.id || fallback.id,
+    label: input?.label || fallback.label,
+    percentage:
+      typeof input?.percentage === "number"
+        ? input.percentage
+        : fallback.percentage,
+    description: input?.description || fallback.description,
+  }
+}
+
 function normalizeSignatory(
   input: Partial<InvoiceSignatory> | undefined,
   fallback: InvoiceSignatory
@@ -130,6 +147,10 @@ function normalizeFooterContact(
   }
 }
 
+function normalizeMoneyString(value: unknown, fallback = "") {
+  return typeof value === "string" ? value : fallback
+}
+
 export function normalizeInvoice(input: InvoiceRecord): InvoiceRecord {
   const status = normalizeStoredStatus((input as { status?: unknown }).status)
   const fallback = createDefaultInvoice(
@@ -151,6 +172,28 @@ export function normalizeInvoice(input: InvoiceRecord): InvoiceRecord {
         ? expiresAtRaw
         : addDays(trashedAt ?? defaultTrashedAt, TRASH_RETENTION_DAYS)
       : null
+  const subtotal = normalizeMoneyString((input as { subtotal?: unknown }).subtotal)
+  const total = normalizeMoneyString((input as { total?: unknown }).total)
+  const packageTotal = normalizeMoneyString(
+    (input as { packageTotal?: unknown }).packageTotal,
+    total || subtotal || fallback.packageTotal
+  )
+  const amountReceived = normalizeMoneyString(
+    (input as { amountReceived?: unknown }).amountReceived,
+    "0"
+  )
+  const currentInvoiceAmount = normalizeMoneyString(
+    (input as { currentInvoiceAmount?: unknown }).currentInvoiceAmount,
+    total || subtotal || fallback.currentInvoiceAmount
+  )
+  const balanceDue = String(
+    Math.max(
+      parseAmount(packageTotal) -
+        parseAmount(amountReceived) -
+        parseAmount(currentInvoiceAmount),
+      0
+    )
+  )
 
   return {
     ...fallback,
@@ -160,6 +203,10 @@ export function normalizeInvoice(input: InvoiceRecord): InvoiceRecord {
     trashedAt,
     expiresAt,
     creatorUserId: input.creatorUserId || fallback.creatorUserId,
+    packageTotal,
+    amountReceived,
+    currentInvoiceAmount,
+    balanceDue,
     studio: normalizeStudio(input.studio, fallback.studio),
     installments: (input.installments?.length
       ? input.installments
@@ -177,6 +224,26 @@ export function normalizeInvoice(input: InvoiceRecord): InvoiceRecord {
         }
       )
     ),
+    paymentTerms: (input.paymentTerms?.length
+      ? input.paymentTerms
+      : fallback.paymentTerms
+    ).map((term, index) =>
+      normalizePaymentTerm(
+        term,
+        fallback.paymentTerms[Math.min(index, fallback.paymentTerms.length - 1)]
+      )
+    ),
+    terms:
+      Array.isArray(input.terms) && input.terms.length
+        ? input.terms.filter(Boolean)
+        : fallback.terms,
+    privacyPolicy:
+      Array.isArray((input as { privacyPolicy?: unknown[] }).privacyPolicy) &&
+      (input as { privacyPolicy?: string[] }).privacyPolicy?.length
+        ? ((input as { privacyPolicy?: string[] }).privacyPolicy ?? []).filter(
+            Boolean
+          )
+        : fallback.privacyPolicy,
     bankDetails: normalizeBankDetails(input.bankDetails, fallback.bankDetails),
     signatory: normalizeSignatory(input.signatory, fallback.signatory),
     footerContact: normalizeFooterContact(

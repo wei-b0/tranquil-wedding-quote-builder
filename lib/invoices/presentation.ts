@@ -71,6 +71,30 @@ export function getInstallmentTotal(invoice: InvoiceRecord) {
   )
 }
 
+export function resolveInvoicePackageTotal(invoice: InvoiceRecord) {
+  const explicit = parseAmount(invoice.packageTotal)
+  if (explicit) return explicit
+  return resolveInvoiceTotal(invoice)
+}
+
+export function resolveInvoiceAmountReceived(invoice: InvoiceRecord) {
+  return parseAmount(invoice.amountReceived)
+}
+
+export function resolveInvoiceCurrentAmount(invoice: InvoiceRecord) {
+  const explicit = parseAmount(invoice.currentInvoiceAmount)
+  if (explicit) return explicit
+  return resolveInvoiceTotal(invoice)
+}
+
+export function resolveInvoiceBalanceDue(invoice: InvoiceRecord) {
+  const derived =
+    resolveInvoicePackageTotal(invoice) -
+    resolveInvoiceAmountReceived(invoice) -
+    resolveInvoiceCurrentAmount(invoice)
+  return Math.max(derived, 0)
+}
+
 export function resolveInvoiceSubtotal(invoice: InvoiceRecord) {
   const explicit = parseAmount(invoice.subtotal)
   return explicit || getInstallmentTotal(invoice)
@@ -169,5 +193,5 @@ function numberToIndianWords(value: number) {
 
 export function resolveAmountInWords(invoice: InvoiceRecord) {
   if (invoice.amountInWords.trim()) return invoice.amountInWords.trim()
-  return `${numberToIndianWords(resolveInvoiceTotal(invoice))} Rupees only/-`
+  return `${numberToIndianWords(resolveInvoiceCurrentAmount(invoice))} Rupees only/-`
 }

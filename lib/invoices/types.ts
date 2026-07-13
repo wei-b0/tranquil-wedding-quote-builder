@@ -9,6 +9,13 @@ export type InvoiceInstallmentRow = {
   amount: string
 }
 
+export type InvoicePaymentMilestone = {
+  id: string
+  label: string
+  percentage: number
+  description: string
+}
+
 export type InvoiceBankDetails = {
   bankName: string
   accountHolderName: string
@@ -51,8 +58,15 @@ export type InvoiceRecord = {
   clientName: string
   invoiceTitle: string
   invoiceDate: string
+  packageTotal: string
+  amountReceived: string
+  currentInvoiceAmount: string
+  balanceDue: string
   studio: InvoiceStudioDetails
   installments: InvoiceInstallmentRow[]
+  paymentTerms: InvoicePaymentMilestone[]
+  terms: string[]
+  privacyPolicy: string[]
   subtotal: string
   total: string
   amountInWords: string

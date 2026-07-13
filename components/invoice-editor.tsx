@@ -9,10 +9,16 @@ import { ToastOnMount } from "@/components/toast-on-mount"
 import { Button } from "@/components/ui/button"
 import {
   resolveAmountInWords,
-  resolveInvoiceSubtotal,
-  resolveInvoiceTotal,
+  resolveInvoiceBalanceDue,
+  resolveInvoiceCurrentAmount,
+  resolveInvoicePackageTotal,
 } from "@/lib/invoices/presentation"
-import type { InvoiceInstallmentRow, InvoiceRecord } from "@/lib/invoices/types"
+import { parseAmount } from "@/lib/quotes/format"
+import type {
+  InvoiceInstallmentRow,
+  InvoicePaymentMilestone,
+  InvoiceRecord,
+} from "@/lib/invoices/types"
 
 type InvoiceEditorProps = {
   initialInvoice: InvoiceRecord
@@ -44,6 +50,26 @@ function sectionCardClassName() {
 
 function addButtonClassName() {
   return "rounded-full bg-[#6f7f68] px-4 py-2 text-sm font-medium text-white hover:bg-[#65755e] hover:text-white"
+}
+
+function syncInvoiceSummary(
+  invoice: InvoiceRecord,
+  updates: Partial<InvoiceRecord>
+): InvoiceRecord {
+  const next = { ...invoice, ...updates }
+  const balanceDue = String(
+    Math.max(
+      parseAmount(next.packageTotal) -
+        parseAmount(next.amountReceived) -
+        parseAmount(next.currentInvoiceAmount),
+      0
+    )
+  )
+
+  return {
+    ...next,
+    balanceDue,
+  }
 }
 
 function InstallmentEditor({
@@ -105,6 +131,124 @@ function InstallmentEditor({
   )
 }
 
+function PaymentMilestoneEditor({
+  term,
+  onChange,
+  onRemove,
+  canRemove,
+}: {
+  term: InvoicePaymentMilestone
+  onChange: (term: InvoicePaymentMilestone) => void
+  onRemove: () => void
+  canRemove: boolean
+}) {
+  return (
+    <div className="grid gap-4 rounded-[1.45rem] border border-[#ddd7cc] bg-[#f9f7f2] p-4 md:grid-cols-[1fr_130px]">
+      <div className="space-y-4">
+        <Field label="Label">
+          <input
+            className={inputClassName()}
+            value={term.label}
+            onChange={(event) =>
+              onChange({ ...term, label: event.target.value })
+            }
+          />
+        </Field>
+        <Field label="Description">
+          <input
+            className={inputClassName()}
+            value={term.description}
+            onChange={(event) =>
+              onChange({ ...term, description: event.target.value })
+            }
+          />
+        </Field>
+      </div>
+      <div className="space-y-4">
+        <Field label="Percent">
+          <input
+            type="number"
+            className={inputClassName()}
+            value={term.percentage}
+            onChange={(event) =>
+              onChange({ ...term, percentage: Number(event.target.value || 0) })
+            }
+          />
+        </Field>
+        {canRemove ? (
+          <button
+            type="button"
+            className="text-sm text-[#857a63]"
+            onClick={onRemove}
+          >
+            Remove milestone
+          </button>
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
+function RowsEditor({
+  label,
+  values,
+  onChange,
+  addLabel,
+}: {
+  label: string
+  values: string[]
+  onChange: (values: string[]) => void
+  addLabel: string
+}) {
+  return (
+    <div className="grid gap-4">
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-sm font-medium text-[#39362f]">{label}</span>
+        <button
+          type="button"
+          className={addButtonClassName()}
+          onClick={() => onChange([...values, ""])}
+        >
+          {addLabel}
+        </button>
+      </div>
+      {values.map((value, index) => (
+        <div
+          key={`${label}-${index}`}
+          className="grid gap-3 rounded-[1.45rem] border border-[#ddd7cc] bg-[#f9f7f2] p-4"
+        >
+          <textarea
+            className={`${inputClassName()} min-h-28`}
+            value={value}
+            onChange={(event) =>
+              onChange(
+                values.map((entry, entryIndex) =>
+                  entryIndex === index ? event.target.value : entry
+                )
+              )
+            }
+          />
+          <div className="flex justify-end">
+            <button
+              type="button"
+              className="text-sm text-[#857a63]"
+              onClick={() =>
+                onChange(
+                  values.length > 1
+                    ? values.filter((_, entryIndex) => entryIndex !== index)
+                    : values
+                )
+              }
+            >
+              Remove row
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 function SaveActions({
   invoiceId,
   onOpenPreview,
@@ -150,14 +294,16 @@ export function InvoiceEditor({
   const [isStudioOpen, setIsStudioOpen] = useState(false)
   const [isBankOpen, setIsBankOpen] = useState(false)
   const [isSignatoryOpen, setIsSignatoryOpen] = useState(false)
+  const [isLegalOpen, setIsLegalOpen] = useState(false)
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [showSavedToast] = useState(
     () =>
       typeof window !== "undefined" &&
       new URLSearchParams(window.location.search).get("saved") === "1"
   )
-  const subtotal = resolveInvoiceSubtotal(invoice)
-  const total = resolveInvoiceTotal(invoice)
+  const packageTotal = resolveInvoicePackageTotal(invoice)
+  const currentInvoiceAmount = resolveInvoiceCurrentAmount(invoice)
+  const balanceDue = resolveInvoiceBalanceDue(invoice)
   const amountInWords = resolveAmountInWords(invoice)
 
   return (
@@ -227,13 +373,78 @@ export function InvoiceEditor({
         </section>
 
         <section className={sectionCardClassName()}>
+          <p className="text-xs tracking-[0.3em] text-[#7b776f] uppercase">
+            Billing Summary
+          </p>
+          <h2 className="mt-2 font-serif text-2xl text-[#39362f]">
+            Show the package, received amount, and current demand
+          </h2>
+          <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <Field label="Package total">
+              <input
+                className={inputClassName()}
+                inputMode="numeric"
+                value={invoice.packageTotal}
+                onChange={(event) =>
+                  setInvoice((current) =>
+                    syncInvoiceSummary(current, {
+                      packageTotal: event.target.value,
+                    })
+                  )
+                }
+                placeholder={String(packageTotal)}
+              />
+            </Field>
+            <Field label="Amount received so far">
+              <input
+                className={inputClassName()}
+                inputMode="numeric"
+                value={invoice.amountReceived}
+                onChange={(event) =>
+                  setInvoice((current) =>
+                    syncInvoiceSummary(current, {
+                      amountReceived: event.target.value,
+                    })
+                  )
+                }
+              />
+            </Field>
+            <Field label="This invoice requests">
+              <input
+                className={inputClassName()}
+                inputMode="numeric"
+                value={invoice.currentInvoiceAmount}
+                onChange={(event) =>
+                  setInvoice((current) =>
+                    syncInvoiceSummary(current, {
+                      currentInvoiceAmount: event.target.value,
+                      subtotal: event.target.value,
+                      total: event.target.value,
+                    })
+                  )
+                }
+                placeholder={String(currentInvoiceAmount)}
+              />
+            </Field>
+            <Field label="Balance due">
+              <input
+                className={`${inputClassName()} bg-[#f4f1ea] text-[#6b665b]`}
+                value={invoice.balanceDue}
+                placeholder={String(balanceDue)}
+                readOnly
+              />
+            </Field>
+          </div>
+        </section>
+
+        <section className={sectionCardClassName()}>
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-xs tracking-[0.3em] text-[#7b776f] uppercase">
-                Installments
+                Payment Schedule
               </p>
               <h2 className="mt-2 font-serif text-2xl text-[#39362f]">
-                Build the payment distribution table
+                Build the payment distribution context
               </h2>
             </div>
             <button
@@ -286,47 +497,11 @@ export function InvoiceEditor({
 
         <section className={sectionCardClassName()}>
           <p className="text-xs tracking-[0.3em] text-[#7b776f] uppercase">
-            Totals
+            Amount In Words
           </p>
           <h2 className="mt-2 font-serif text-2xl text-[#39362f]">
-            Totals and amount in words
+            Describe the current invoice amount
           </h2>
-          <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            <Field label="Subtotal">
-              <input
-                className={inputClassName()}
-                inputMode="numeric"
-                value={invoice.subtotal}
-                onChange={(event) =>
-                  setInvoice((current) => ({
-                    ...current,
-                    subtotal: event.target.value,
-                  }))
-                }
-                placeholder={String(subtotal)}
-              />
-            </Field>
-            <Field label="Total">
-              <input
-                className={inputClassName()}
-                inputMode="numeric"
-                value={invoice.total}
-                onChange={(event) =>
-                  setInvoice((current) => ({
-                    ...current,
-                    total: event.target.value,
-                  }))
-                }
-                placeholder={String(total)}
-              />
-            </Field>
-            <div className="rounded-[1.35rem] border border-[#d7e1d3] bg-[#f5faf3] px-5 py-4">
-              <p className="text-xs tracking-[0.24em] text-[#6f7f68] uppercase">
-                Auto total preview
-              </p>
-              <p className="mt-2 font-serif text-2xl text-[#2f3c33]">{total}</p>
-            </div>
-          </div>
           <div className="mt-4">
             <Field label="Amount in words">
               <textarea
@@ -342,6 +517,105 @@ export function InvoiceEditor({
               />
             </Field>
           </div>
+        </section>
+
+        <section className={sectionCardClassName()}>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs tracking-[0.3em] text-[#7b776f] uppercase">
+                Milestones & Terms
+              </p>
+              <h2 className="mt-2 font-serif text-2xl text-[#39362f]">
+                Second-page payment and legal details
+              </h2>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              className="hover:text-[#39362f]"
+              onClick={() => setIsLegalOpen((current) => !current)}
+            >
+              {isLegalOpen ? (
+                <ChevronUp className="size-4" />
+              ) : (
+                <ChevronDown className="size-4" />
+              )}
+              {isLegalOpen ? "Close" : "Edit"}
+            </Button>
+          </div>
+          {isLegalOpen ? (
+            <div className="mt-5 grid gap-5">
+              <div className="grid gap-4">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-sm font-medium text-[#39362f]">
+                    Payment milestones
+                  </span>
+                  <button
+                    type="button"
+                    className={addButtonClassName()}
+                    onClick={() =>
+                      setInvoice((current) => ({
+                        ...current,
+                        paymentTerms: [
+                          ...current.paymentTerms,
+                          {
+                            id: crypto.randomUUID(),
+                            label: "New milestone",
+                            percentage: 0,
+                            description: "",
+                          },
+                        ],
+                      }))
+                    }
+                  >
+                    Add milestone
+                  </button>
+                </div>
+                {invoice.paymentTerms.map((term) => (
+                  <PaymentMilestoneEditor
+                    key={term.id}
+                    term={term}
+                    canRemove={invoice.paymentTerms.length > 1}
+                    onChange={(nextTerm) =>
+                      setInvoice((current) => ({
+                        ...current,
+                        paymentTerms: current.paymentTerms.map((entry) =>
+                          entry.id === term.id ? nextTerm : entry
+                        ),
+                      }))
+                    }
+                    onRemove={() =>
+                      setInvoice((current) => ({
+                        ...current,
+                        paymentTerms:
+                          current.paymentTerms.length > 1
+                            ? current.paymentTerms.filter(
+                                (entry) => entry.id !== term.id
+                              )
+                            : current.paymentTerms,
+                      }))
+                    }
+                  />
+                ))}
+              </div>
+              <RowsEditor
+                label="Terms & Conditions"
+                values={invoice.terms}
+                onChange={(terms) =>
+                  setInvoice((current) => ({ ...current, terms }))
+                }
+                addLabel="Add term"
+              />
+              <RowsEditor
+                label="Additional policy points"
+                values={invoice.privacyPolicy}
+                onChange={(privacyPolicy) =>
+                  setInvoice((current) => ({ ...current, privacyPolicy }))
+                }
+                addLabel="Add policy point"
+              />
+            </div>
+          ) : null}
         </section>
 
         <section className={sectionCardClassName()}>

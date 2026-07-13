@@ -6,8 +6,10 @@ import {
   formatInvoiceRowDate,
   invoiceTheme,
   resolveAmountInWords,
-  resolveInvoiceSubtotal,
-  resolveInvoiceTotal,
+  resolveInvoiceAmountReceived,
+  resolveInvoiceBalanceDue,
+  resolveInvoiceCurrentAmount,
+  resolveInvoicePackageTotal,
 } from "@/lib/invoices/presentation"
 import type { InvoiceRecord } from "@/lib/invoices/types"
 import { cn } from "@/lib/utils"
@@ -79,23 +81,94 @@ function SignatureBlock({ invoice }: { invoice: InvoiceRecord }) {
   )
 }
 
+function TermsPagePreview({ invoice }: { invoice: InvoiceRecord }) {
+  const policyItems = [...invoice.terms, ...invoice.privacyPolicy]
+  const leftColumn = policyItems.filter((_, index) => index % 2 === 0)
+  const rightColumn = policyItems.filter((_, index) => index % 2 === 1)
+
+  return (
+      <div className="mt-8 overflow-hidden bg-white shadow-[0_28px_80px_rgba(29,45,34,0.08)]">
+      <div className="aspect-[0.7727] w-full bg-white px-8 py-6 md:px-12 md:py-8">
+        <div className="text-center">
+          <div className="text-[0.68rem] tracking-[0.18em] text-[#666666] uppercase">
+            Terms
+          </div>
+          <h2 className="mt-2 font-serif text-4xl text-[#1E542A]">
+            Payment milestones and conditions
+          </h2>
+        </div>
+
+        <div className="mt-5 rounded-[1.25rem] bg-[#1E542A] px-4 py-4 text-white">
+          <h3 className="font-serif text-2xl">Payment milestones</h3>
+          <div className="mt-3 grid gap-2 md:grid-cols-3">
+            {invoice.paymentTerms.map((term, index) => (
+              <div
+                key={term.id}
+                className="rounded-xl bg-white/6 px-3 py-3"
+              >
+                <div className="font-serif text-2xl text-[#D7B448]">
+                  {term.percentage}%
+                </div>
+                <div className="mt-1">
+                  <div className="text-[0.6rem] tracking-[0.14em] text-[#b9c9bb] uppercase">
+                    Milestone {index + 1}
+                  </div>
+                  <div className="mt-1 font-serif text-lg">{term.label}</div>
+                  <div className="mt-1 text-[0.72rem] leading-4 text-white/80">
+                    {term.description}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-3 xl:grid-cols-2">
+          {[leftColumn, rightColumn].map((column, columnIndex) => (
+            <div key={columnIndex} className="space-y-2">
+              {column.map((term, index) => {
+                const number = columnIndex + index * 2 + 1
+                return (
+                  <div key={`${term}-${number}`}>
+                    <div className="flex items-baseline gap-2 text-[0.72rem] font-semibold tracking-[0.08em] text-[#1E542A] uppercase">
+                      <span className="font-serif text-2xl text-[#D7B448]">
+                        {String(number).padStart(2, "0")}
+                      </span>
+                    </div>
+                    <p className="mt-0.5 text-[0.78rem] leading-4 text-[#202020]">
+                      {term}
+                    </p>
+                  </div>
+                )
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function InvoicePreview({ invoice, className }: InvoicePreviewProps) {
-  const subtotal = resolveInvoiceSubtotal(invoice)
-  const total = resolveInvoiceTotal(invoice)
+  const packageTotal = resolveInvoicePackageTotal(invoice)
+  const amountReceived = resolveInvoiceAmountReceived(invoice)
+  const currentInvoiceAmount = resolveInvoiceCurrentAmount(invoice)
+  const balanceDue = resolveInvoiceBalanceDue(invoice)
   const amountInWords = resolveAmountInWords(invoice)
   const address = invoice.studio.addressLines.filter(Boolean)
 
   return (
     <div
       className={cn(
-        "overflow-hidden bg-white shadow-[0_28px_80px_rgba(29,45,34,0.08)]",
+        "overflow-hidden bg-transparent",
         className
       )}
       style={{
         color: invoiceTheme.colors.text,
       }}
     >
-      <div className="aspect-[0.7727] w-full bg-white px-10 py-8 md:px-14 md:py-10">
+      <div className="overflow-hidden bg-white shadow-[0_28px_80px_rgba(29,45,34,0.08)]">
+        <div className="aspect-[0.7727] w-full bg-white px-10 py-8 md:px-14 md:py-10">
         <div className="flex items-start justify-between gap-8">
           <div className="max-w-[19rem]">
             <h1 className="max-w-[13rem] text-5xl leading-[0.95] font-semibold text-[#1E542A]">
@@ -138,7 +211,7 @@ export function InvoicePreview({ invoice, className }: InvoicePreviewProps) {
         </div>
 
         <div className="mt-10">
-          <div className="grid grid-cols-[1.8fr_0.8fr_0.7fr] gap-6 border-b border-[#808C67] pb-4 text-lg font-semibold text-[#101010]">
+          <div className="grid grid-cols-[1.8fr_0.8fr_0.7fr] gap-6 border-b border-[#d8d8d8] pb-4 text-lg font-semibold text-[#101010]">
             <div>Payment Distribution</div>
             <div className="text-center">Event Date</div>
             <div className="text-right">Installment</div>
@@ -210,13 +283,21 @@ export function InvoicePreview({ invoice, className }: InvoicePreviewProps) {
           <div className="flex flex-col justify-between">
             <div className="ml-auto w-full max-w-[18rem]">
               <SummaryRow
-                label="Total"
-                value={formatInvoiceCurrency(total, "Rs. 0")}
+                label="Package Total"
+                value={formatInvoiceCurrency(packageTotal, "Rs. 0")}
                 strong
               />
               <SummaryRow
-                label="Subtotal"
-                value={formatInvoiceCurrency(subtotal, "Rs. 0")}
+                label="Amount Received"
+                value={formatInvoiceCurrency(amountReceived, "Rs. 0")}
+              />
+              <SummaryRow
+                label="This Invoice"
+                value={formatInvoiceCurrency(currentInvoiceAmount, "Rs. 0")}
+              />
+              <SummaryRow
+                label="Balance Due"
+                value={formatInvoiceCurrency(balanceDue, "Rs. 0")}
               />
             </div>
             <div className="mt-12">
@@ -224,13 +305,15 @@ export function InvoicePreview({ invoice, className }: InvoicePreviewProps) {
             </div>
           </div>
         </div>
-      </div>
+        </div>
 
-      <div className="grid grid-cols-3 gap-6 bg-[#1E542A] px-8 py-5 text-center text-[1.05rem] tracking-[0.14em] text-white md:px-14">
-        <div>{invoice.footerContact.website}</div>
-        <div>{invoice.footerContact.phone}</div>
-        <div>{invoice.footerContact.email}</div>
+        <div className="grid grid-cols-3 gap-6 bg-[#1E542A] px-8 py-5 text-center text-[1.05rem] tracking-[0.14em] text-white md:px-14">
+          <div>{invoice.footerContact.website}</div>
+          <div>{invoice.footerContact.phone}</div>
+          <div>{invoice.footerContact.email}</div>
+        </div>
       </div>
+      <TermsPagePreview invoice={invoice} />
     </div>
   )
 }

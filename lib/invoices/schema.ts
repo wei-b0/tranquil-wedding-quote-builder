@@ -14,6 +14,10 @@ export const invoicePayloadSchema = z.object({
   clientName: z.string(),
   invoiceTitle: z.string(),
   invoiceDate: z.string(),
+  packageTotal: z.string(),
+  amountReceived: z.string(),
+  currentInvoiceAmount: z.string(),
+  balanceDue: z.string(),
   studio: z.object({
     name: z.string(),
     addressLines: z.array(z.string()),
@@ -27,6 +31,16 @@ export const invoicePayloadSchema = z.object({
       amount: z.string(),
     })
   ),
+  paymentTerms: z.array(
+    z.object({
+      id: z.string(),
+      label: z.string(),
+      percentage: z.number(),
+      description: z.string(),
+    })
+  ),
+  terms: z.array(z.string()),
+  privacyPolicy: z.array(z.string()),
   subtotal: z.string(),
   total: z.string(),
   amountInWords: z.string(),

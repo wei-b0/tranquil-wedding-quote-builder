@@ -16,8 +16,10 @@ import {
   formatInvoiceHeaderDate,
   formatInvoiceRowDate,
   resolveAmountInWords,
-  resolveInvoiceSubtotal,
-  resolveInvoiceTotal,
+  resolveInvoiceAmountReceived,
+  resolveInvoiceBalanceDue,
+  resolveInvoiceCurrentAmount,
+  resolveInvoicePackageTotal,
 } from "@/lib/invoices/presentation"
 import type { InvoiceRecord } from "@/lib/invoices/types"
 
@@ -137,7 +139,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     paddingBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: "#808C67",
+    borderBottomColor: "#D8D8D8",
     fontSize: 11.5,
     fontWeight: 700,
   },
@@ -314,15 +316,108 @@ const styles = StyleSheet.create({
     fontSize: 8.8,
     letterSpacing: 1.1,
   },
+  termsPageBody: {
+    paddingTop: 18,
+  },
+  termsKicker: {
+    fontSize: 7.8,
+    textTransform: "uppercase",
+    letterSpacing: 1.8,
+    color: "#666666",
+    textAlign: "center",
+  },
+  termsTitle: {
+    marginTop: 6,
+    fontFamily: "InvoiceDisplay",
+    fontSize: 22,
+    textAlign: "center",
+    color: "#1E542A",
+  },
+  legalMilestoneCard: {
+    marginTop: 12,
+    borderRadius: 16,
+    backgroundColor: "#1E542A",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  legalMilestoneHeading: {
+    fontFamily: "InvoiceDisplay",
+    fontSize: 16,
+    color: "#FFFFFF",
+  },
+  legalMilestoneGrid: {
+    marginTop: 8,
+    flexDirection: "row",
+    gap: 8,
+  },
+  legalMilestoneItem: {
+    flexGrow: 1,
+    flexBasis: 0,
+    minHeight: 74,
+    borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.06)",
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+  },
+  legalMilestonePct: {
+    fontFamily: "InvoiceDisplay",
+    fontSize: 17,
+    color: "#D7B448",
+  },
+  legalMilestoneBody: {
+    marginTop: 2,
+  },
+  legalMilestoneLabel: {
+    fontSize: 6.4,
+    textTransform: "uppercase",
+    letterSpacing: 1.1,
+    color: "#B8C8BA",
+  },
+  legalMilestoneName: {
+    marginTop: 1,
+    fontSize: 10.2,
+    color: "#FFFFFF",
+  },
+  legalMilestoneText: {
+    marginTop: 1,
+    fontSize: 7.3,
+    lineHeight: 1.22,
+    color: "rgba(255,255,255,0.8)",
+  },
+  termsGrid: {
+    marginTop: 10,
+    flexDirection: "row",
+    gap: 10,
+  },
+  termsCol: {
+    flexGrow: 1,
+    flexBasis: 0,
+  },
+  termItem: {
+    marginBottom: 6,
+  },
+  termNumber: {
+    fontFamily: "InvoiceDisplay",
+    fontSize: 13,
+    color: "#D7B448",
+  },
+  termText: {
+    marginTop: 0,
+    fontSize: 7,
+    lineHeight: 1.16,
+  },
 })
 
 export function buildInvoicePdfDocument(
   invoice: InvoiceRecord,
   options?: Omit<DocumentProps, "children">
 ): ReactElement<DocumentProps> {
-  const subtotal = resolveInvoiceSubtotal(invoice)
-  const total = resolveInvoiceTotal(invoice)
+  const packageTotal = resolveInvoicePackageTotal(invoice)
+  const amountReceived = resolveInvoiceAmountReceived(invoice)
+  const currentInvoiceAmount = resolveInvoiceCurrentAmount(invoice)
+  const balanceDue = resolveInvoiceBalanceDue(invoice)
   const amountInWords = resolveAmountInWords(invoice)
+  const policyItems = [...invoice.terms, ...invoice.privacyPolicy]
 
   return (
     <Document title={invoice.invoiceTitle} {...options}>
@@ -432,17 +527,31 @@ export function buildInvoicePdfDocument(
               <View style={styles.rightLower}>
                 <View style={styles.totalsWrap}>
                   <View style={styles.totalRow}>
-                    <Text style={styles.totalLabel}>Subtotal</Text>
+                    <Text style={[styles.totalLabel, styles.totalLabelStrong]}>
+                      Package Total
+                    </Text>
                     <Text style={styles.totalValue}>
-                      {formatInvoiceCurrency(subtotal, "Rs. 0")}
+                      {formatInvoiceCurrency(packageTotal, "Rs. 0")}
+                    </Text>
+                  </View>
+                  <View style={styles.totalRow}>
+                    <Text style={styles.totalLabel}>Amount Received</Text>
+                    <Text style={[styles.totalValue, styles.totalValueStrong]}>
+                      {formatInvoiceCurrency(amountReceived, "Rs. 0")}
+                    </Text>
+                  </View>
+                  <View style={styles.totalRow}>
+                    <Text style={styles.totalLabel}>This Invoice</Text>
+                    <Text style={styles.totalValue}>
+                      {formatInvoiceCurrency(currentInvoiceAmount, "Rs. 0")}
                     </Text>
                   </View>
                   <View style={styles.totalRow}>
                     <Text style={[styles.totalLabel, styles.totalLabelStrong]}>
-                      Total
+                      Balance Due
                     </Text>
                     <Text style={[styles.totalValue, styles.totalValueStrong]}>
-                      {formatInvoiceCurrency(total, "Rs. 0")}
+                      {formatInvoiceCurrency(balanceDue, "Rs. 0")}
                     </Text>
                   </View>
                 </View>
@@ -483,6 +592,57 @@ export function buildInvoicePdfDocument(
               <Text>{invoice.footerContact.phone}</Text>
               <Text>{invoice.footerContact.email}</Text>
             </View>
+          </View>
+        </View>
+      </Page>
+
+      <Page size="LETTER" style={styles.page}>
+        <View style={styles.termsPageBody}>
+          <Text style={styles.termsKicker}>Terms</Text>
+          <Text style={styles.termsTitle}>
+            Payment milestones and conditions
+          </Text>
+
+          <View style={styles.legalMilestoneCard} wrap={false}>
+            <Text style={styles.legalMilestoneHeading}>Payment milestones</Text>
+            <View style={styles.legalMilestoneGrid}>
+              {invoice.paymentTerms.map((term, index) => (
+                <View key={term.id} style={styles.legalMilestoneItem}>
+                  <Text style={styles.legalMilestonePct}>
+                    {term.percentage}%
+                  </Text>
+                  <View style={styles.legalMilestoneBody}>
+                    <Text style={styles.legalMilestoneLabel}>
+                      Milestone {index + 1}
+                    </Text>
+                    <Text style={styles.legalMilestoneName}>{term.label}</Text>
+                    <Text style={styles.legalMilestoneText}>
+                      {term.description}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.termsGrid}>
+            {[0, 1].map((columnIndex) => (
+              <View key={columnIndex} style={styles.termsCol}>
+                {policyItems
+                  .filter((_, index) => index % 2 === columnIndex)
+                  .map((term, index) => {
+                    const number = columnIndex + index * 2 + 1
+                    return (
+                      <View key={`${term}-${number}`} style={styles.termItem}>
+                        <Text style={styles.termNumber}>
+                          {String(number).padStart(2, "0")}
+                        </Text>
+                        <Text style={styles.termText}>{term}</Text>
+                      </View>
+                    )
+                  })}
+              </View>
+            ))}
           </View>
         </View>
       </Page>
