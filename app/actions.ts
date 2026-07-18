@@ -99,16 +99,18 @@ export async function saveQuoteAction(formData: FormData) {
   const session = await requireSession()
   const store = getQuoteStore()
   const quote = parsePayload(formData)
-  const intent = String(formData.get("intent") ?? "draft")
-  const status = intent === "share" ? "shared" : quote.status
-  const saved = await store.saveQuote(session, setQuoteStatus(quote, status))
+  const intent = String(formData.get("intent") ?? "save")
+  const saved = await store.saveQuote(session, setQuoteStatus(quote, "shared"))
   revalidatePath("/dashboard")
   revalidatePath(`/quotes/${saved.id}`)
   revalidatePath(`/quotes/${saved.id}/edit`)
   revalidatePath(`/q/${saved.slug}`)
+  if (intent === "web-preview") {
+    redirect(`/q/${saved.slug}`)
+  }
   redirect(
-    intent === "preview"
-      ? `/quotes/${saved.id}?saved=1`
+    intent === "pdf-preview"
+      ? `/quotes/${saved.id}/edit?saved=1&preview=pdf`
       : `/quotes/${saved.id}/edit?saved=1`
   )
 }

@@ -29,7 +29,6 @@ export function createDefaultInvoice(
     invoiceTitle: "Wedding Coverage Invoice",
     invoiceDate: now.slice(0, 10),
     packageTotal: "0",
-    amountReceived: "0",
     currentInvoiceAmount: "0",
     balanceDue: "0",
     studio: {

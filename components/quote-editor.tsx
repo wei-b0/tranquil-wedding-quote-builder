@@ -10,12 +10,16 @@ import { ToastOnMount } from "@/components/toast-on-mount"
 import { Button } from "@/components/ui/button"
 import { applyCoverageDefaults } from "@/lib/quotes/defaults"
 import { syncPackagePricing } from "@/lib/quotes/format"
-import { getQuoteCoverageSummary } from "@/lib/quotes/presentation-shared"
+import {
+  getQuoteCoverageSummary,
+  isCeremonyArrangementEvent,
+} from "@/lib/quotes/presentation-shared"
 import type { QuotePackage, QuoteRecord } from "@/lib/quotes/types"
 
 type QuoteEditorProps = {
   initialQuote: QuoteRecord
   saveAction: (formData: FormData) => void
+  openPdfPreview?: boolean
 }
 
 const eventPresets = [
@@ -26,14 +30,16 @@ const eventPresets = [
   "Sagan",
   "Choora",
   "Bhaat",
+  "Lagan",
   "Wedding",
+  "Reception",
   "Cocktail",
   "Prewedding",
 ]
 
 const teamPresets = [
-  "Photographer",
-  "Videographer",
+  "Traditional Photographer",
+  "Traditional Videographer",
   "Candid Photographer",
   "Cinematographer",
   "Drone Operator",
@@ -75,8 +81,8 @@ const deliverablePresets = [
 const timingOptions = ["Morning", "Afternoon", "Evening", "Full day"]
 
 const teamPluralLabels: Record<string, string> = {
-  Photographer: "Photographers",
-  Videographer: "Videographers",
+  "Traditional Photographer": "Traditional Photographers",
+  "Traditional Videographer": "Traditional Videographers",
   "Candid Photographer": "Candid Photographers",
   Cinematographer: "Cinematographers",
   "Drone Operator": "Drone Operators",
@@ -494,11 +500,9 @@ function PackageCard({
 function SaveActions({
   intent,
   onIntentChange,
-  onOpenPreview,
 }: {
-  intent: "draft" | "share" | "preview"
-  onIntentChange: (intent: "draft" | "share" | "preview") => void
-  onOpenPreview: () => void
+  intent: "save" | "pdf-preview" | "web-preview"
+  onIntentChange: (intent: "save" | "pdf-preview" | "web-preview") => void
 }) {
   const { pending } = useFormStatus()
 
@@ -509,45 +513,53 @@ function SaveActions({
         variant="secondary"
         disabled={pending}
         className="bg-[#f3c747] text-[#3d382f] hover:bg-[#ebc95d] hover:text-[#3d382f]"
-        onClick={() => onIntentChange("share")}
+        name="intent"
+        value="save"
+        onClick={() => onIntentChange("save")}
       >
-        {pending && intent === "share" ? <Loader2 className="animate-spin" /> : null}
-        Save and share
+        {pending && intent === "save" ? <Loader2 className="animate-spin" /> : null}
+        Save
       </Button>
       <Button
         type="submit"
         disabled={pending}
         className="bg-[#6f7f68] text-white hover:bg-[#65755e] hover:text-white"
-        onClick={() => onIntentChange("draft")}
+        name="intent"
+        value="pdf-preview"
+        onClick={() => onIntentChange("pdf-preview")}
       >
-        {pending && intent === "draft" ? <Loader2 className="animate-spin" /> : null}
-        Save draft
+        {pending && intent === "pdf-preview" ? <Loader2 className="animate-spin" /> : null}
+        Save and Preview
       </Button>
       <Button
         type="submit"
         variant="outline"
         disabled={pending}
         className="hover:text-[#39362f]"
-        onClick={() => onIntentChange("preview")}
+        name="intent"
+        value="web-preview"
+        formTarget="_blank"
+        onClick={() => onIntentChange("web-preview")}
       >
-        {pending && intent === "preview" ? <Loader2 className="animate-spin" /> : null}
-        Save and preview
-      </Button>
-      <Button type="button" variant="ghost" onClick={onOpenPreview}>
-        Open Current Preview
+        {pending && intent === "web-preview" ? <Loader2 className="animate-spin" /> : null}
+        Open Web Preview
       </Button>
     </section>
   )
 }
 
-export function QuoteEditor({ initialQuote, saveAction }: QuoteEditorProps) {
+export function QuoteEditor({
+  initialQuote,
+  saveAction,
+  openPdfPreview = false,
+}: QuoteEditorProps) {
   const [quote, setQuote] = useState<QuoteRecord>(initialQuote)
-  const [intent, setIntent] = useState<"draft" | "share" | "preview">("draft")
+  const [intent, setIntent] = useState<"save" | "pdf-preview" | "web-preview">("save")
   const [isAboutSectionOpen, setIsAboutSectionOpen] = useState(false)
   const [isPreWeddingTeamOpen, setIsPreWeddingTeamOpen] = useState(false)
   const [isPreWeddingDeliverablesOpen, setIsPreWeddingDeliverablesOpen] = useState(false)
   const [isLegalSectionOpen, setIsLegalSectionOpen] = useState(false)
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
+  const [isPreviewOpen, setIsPreviewOpen] = useState(openPdfPreview)
   const [showSavedToast] = useState(
     () => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("saved") === "1"
   )
@@ -557,7 +569,6 @@ export function QuoteEditor({ initialQuote, saveAction }: QuoteEditorProps) {
     <div>
       <form action={saveAction} className="space-y-5">
         <input type="hidden" name="payload" value={JSON.stringify(quote)} readOnly />
-        <input type="hidden" name="intent" value={intent} readOnly />
 
         <section className={sectionCardClassName()}>
           <div className="flex items-center justify-between gap-4">
@@ -606,13 +617,6 @@ export function QuoteEditor({ initialQuote, saveAction }: QuoteEditorProps) {
                 placeholder="19 Oct 2026 to 22 Oct 2026"
               />
             </Field>
-          </div>
-          <div className="mt-4 rounded-[1.35rem] border border-[#d7e1d3] bg-[#f5faf3] px-5 py-4">
-            <p className="text-xs uppercase tracking-[0.24em] text-[#6f7f68]">Coverage summary</p>
-            <p className="mt-2 font-serif text-2xl text-[#2f3c33]">{coverageSummary}</p>
-            <p className="mt-2 text-sm leading-7 text-[#5e6b60]">
-              Day count is derived automatically from the unique event dates you enter below.
-            </p>
           </div>
           <div className="mt-4 rounded-[1.35rem] border border-[#ddd7cc] bg-[#f9f7f2] px-4 py-4">
             <div className="flex items-center justify-between gap-3">
@@ -791,6 +795,32 @@ export function QuoteEditor({ initialQuote, saveAction }: QuoteEditorProps) {
                           ))}
                         </select>
                       </Field>
+                      {isCeremonyArrangementEvent(item.title) ? (
+                        <Field label="Ceremony arrangement">
+                          <select
+                            className={inputClassName()}
+                            value={
+                              item.coverage === "combined" || item.coverage === "separate"
+                                ? item.coverage
+                                : ""
+                            }
+                            onChange={(event) =>
+                              setQuote((current) => ({
+                                ...current,
+                                events: current.events.map((entry) =>
+                                  entry.id === item.id
+                                    ? { ...entry, coverage: event.target.value }
+                                    : entry
+                                ),
+                              }))
+                            }
+                          >
+                            <option value="">Select arrangement</option>
+                            <option value="combined">Combined ceremony</option>
+                            <option value="separate">Separate ceremonies</option>
+                          </select>
+                        </Field>
+                      ) : null}
                     </div>
                     <div className="mt-4">
                       <EventTeamEditor
@@ -824,7 +854,7 @@ export function QuoteEditor({ initialQuote, saveAction }: QuoteEditorProps) {
                       date: "",
                       title: "",
                       location: current.location,
-                      coverage: current.coverage,
+                      coverage: "",
                       guestCount: "",
                       timing: "Morning",
                       team: ["Photographer", "Videographer"],
@@ -872,6 +902,16 @@ export function QuoteEditor({ initialQuote, saveAction }: QuoteEditorProps) {
                   className={inputClassName()}
                   value={quote.preWeddingDate}
                   onChange={(event) => setQuote((current) => ({ ...current, preWeddingDate: event.target.value }))}
+                />
+              </Field>
+              <Field label="Location">
+                <input
+                  className={inputClassName()}
+                  value={quote.preWeddingLocation}
+                  onChange={(event) =>
+                    setQuote((current) => ({ ...current, preWeddingLocation: event.target.value }))
+                  }
+                  placeholder="Venue or city"
                 />
               </Field>
               <div className="rounded-[1.35rem] border border-[#ddd7cc] bg-[#f9f7f2] px-4 py-4">
@@ -1112,7 +1152,7 @@ export function QuoteEditor({ initialQuote, saveAction }: QuoteEditorProps) {
           ) : null}
         </section>
 
-        <SaveActions intent={intent} onIntentChange={setIntent} onOpenPreview={() => setIsPreviewOpen(true)} />
+        <SaveActions intent={intent} onIntentChange={setIntent} />
       </form>
 
       {showSavedToast ? <ToastOnMount message="Quote saved." /> : null}
@@ -1127,7 +1167,7 @@ export function QuoteEditor({ initialQuote, saveAction }: QuoteEditorProps) {
               </div>
               <div className="flex items-center gap-3">
                 <PdfExportLink
-                  href={`/api/quotes/${quote.id}/pdf`}
+                  href={`/api/quotes/${quote.id}/pdf?v=${encodeURIComponent(quote.updatedAt)}`}
                   className="rounded-full border border-[#ddd7cc] px-4 py-2 text-sm text-[#5e5a54] transition hover:border-[#c8c0b2] hover:bg-[#f6f1e8] hover:text-[#5e5a54]"
                 >
                   Open in new tab
@@ -1140,7 +1180,7 @@ export function QuoteEditor({ initialQuote, saveAction }: QuoteEditorProps) {
             <div className="min-h-0 flex-1 bg-[#f4efe6] p-4">
               <iframe
                 title="Quotation PDF Preview"
-                src={`/api/quotes/${quote.id}/pdf`}
+                src={`/api/quotes/${quote.id}/pdf?v=${encodeURIComponent(quote.updatedAt)}`}
                 className="h-full w-full rounded-[1.25rem] border border-[#ddd7cc] bg-white"
               />
             </div>

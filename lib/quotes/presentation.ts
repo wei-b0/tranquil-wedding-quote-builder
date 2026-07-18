@@ -4,17 +4,18 @@ import path from "node:path"
 import type { QuoteEvent, QuoteRecord } from "@/lib/quotes/types"
 export {
   getEventImageObjectPosition,
+  getCeremonyArrangementLabel,
   getPackageDeliverables,
   getQuoteCoverageStats,
   getQuoteCoverageSummary,
   getQuoteDiscussionMessage,
-  getQuotePackageCoverageNote,
   getQuoteReserveMessage,
   getQuoteSummaryRows,
   getQuoteWhatsAppHref,
   getQuoteWhatsAppMessageHref,
   getSalesProfileInitials,
   getSalesProfileRoleLine,
+  isCeremonyArrangementEvent,
   quoteTheme,
   splitList,
 } from "@/lib/quotes/presentation-shared"

@@ -6,7 +6,6 @@ import {
   formatInvoiceRowDate,
   invoiceTheme,
   resolveAmountInWords,
-  resolveInvoiceAmountReceived,
   resolveInvoiceBalanceDue,
   resolveInvoiceCurrentAmount,
   resolveInvoicePackageTotal,
@@ -151,7 +150,6 @@ function TermsPagePreview({ invoice }: { invoice: InvoiceRecord }) {
 
 export function InvoicePreview({ invoice, className }: InvoicePreviewProps) {
   const packageTotal = resolveInvoicePackageTotal(invoice)
-  const amountReceived = resolveInvoiceAmountReceived(invoice)
   const currentInvoiceAmount = resolveInvoiceCurrentAmount(invoice)
   const balanceDue = resolveInvoiceBalanceDue(invoice)
   const amountInWords = resolveAmountInWords(invoice)
@@ -202,7 +200,7 @@ export function InvoicePreview({ invoice, className }: InvoicePreviewProps) {
           </div>
           <div className="text-right">
             <div className="font-serif text-6xl tracking-[0.08em] text-[#121212]">
-              INVOICE
+              INVOICE / RECEIPT
             </div>
             <div className="mt-8 text-[1.35rem] text-[#202020]">
               Date: {formatInvoiceHeaderDate(invoice.invoiceDate)}
@@ -288,11 +286,7 @@ export function InvoicePreview({ invoice, className }: InvoicePreviewProps) {
                 strong
               />
               <SummaryRow
-                label="Amount Received"
-                value={formatInvoiceCurrency(amountReceived, "Rs. 0")}
-              />
-              <SummaryRow
-                label="This Invoice"
+                label="Payment Received"
                 value={formatInvoiceCurrency(currentInvoiceAmount, "Rs. 0")}
               />
               <SummaryRow

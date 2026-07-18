@@ -7,10 +7,10 @@ import {
   formatTeamLabel,
 } from "@/lib/quotes/format"
 import {
+  getCeremonyArrangementLabel,
   getQuoteImageSlots,
   getPackageDeliverables,
   getEventImageObjectPosition,
-  getQuotePackageCoverageNote,
   getQuoteSummaryRows,
   getQuoteWhatsAppMessageHref,
   getSalesProfileInitials,
@@ -76,7 +76,7 @@ function PackageCard({
   return (
     <article
       className={cn(
-        "flex h-full flex-col rounded-[1.1rem] border p-6",
+        "grid gap-5 rounded-[1.1rem] border p-6 md:grid-cols-[0.8fr_1.45fr_0.8fr] md:items-center",
         pkg.recommended && "shadow-[0_28px_50px_rgba(28,53,45,0.12)]"
       )}
       style={{
@@ -88,29 +88,21 @@ function PackageCard({
           : quoteTheme.colors.line,
       }}
     >
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p
-            className="text-[0.68rem] tracking-[0.24em] uppercase"
-            style={{ color: quoteTheme.colors.sage }}
-          >
-            {pkg.recommended ? "Recommended" : "Package"}
-          </p>
-          <h3
-            className="mt-2 font-serif text-3xl leading-none"
-            style={{ color: quoteTheme.colors.forest }}
-          >
-            {pkg.name}
-          </h3>
-          <p
-            className="mt-3 text-sm leading-7"
-            style={{ color: quoteTheme.colors.supportText }}
-          >
-            {pkg.subtitle}
-          </p>
-        </div>
+      <div>
+        <p
+          className="text-[0.68rem] tracking-[0.24em] uppercase"
+          style={{ color: quoteTheme.colors.sage }}
+        >
+          {pkg.recommended ? "Recommended package" : "Package"}
+        </p>
+        <h3
+          className="mt-2 font-serif text-3xl leading-none"
+          style={{ color: quoteTheme.colors.forest }}
+        >
+          {pkg.name}
+        </h3>
         <span
-          className="rounded-full px-3 py-1 text-[0.62rem] tracking-[0.18em] uppercase"
+          className="mt-4 inline-flex rounded-full px-3 py-1 text-[0.62rem] tracking-[0.18em] uppercase"
           style={{
             backgroundColor: pkg.recommended
               ? quoteTheme.colors.forest
@@ -124,91 +116,46 @@ function PackageCard({
         </span>
       </div>
 
-      <div
-        className="mt-5 rounded-[0.9rem] border px-4 py-4 text-center"
-        style={{
-          backgroundColor: quoteTheme.colors.ivory,
-          borderColor: quoteTheme.colors.line,
-        }}
+      <p
+        className="text-sm leading-7"
+        style={{ color: quoteTheme.colors.supportText }}
       >
+        {pkg.subtitle}
+      </p>
+
+      <div
+        className="border-t pt-5 md:border-t-0 md:border-l md:pt-0 md:pl-6"
+        style={{ borderColor: quoteTheme.colors.line }}
+      >
+        <p
+          className="text-[0.68rem] tracking-[0.2em] uppercase"
+          style={{ color: quoteTheme.colors.sage }}
+        >
+          Package price
+        </p>
         {pricing.applied ? (
-          <>
-            <p
-              className="text-[0.72rem] tracking-[0.22em] uppercase"
-              style={{ color: quoteTheme.colors.sage }}
-            >
-              {pkg.offerLabel || "Special offer"}
-            </p>
-            <p
-              className="mt-2 font-serif text-xl line-through"
-              style={{ color: quoteTheme.colors.mutedText }}
-            >
-              {formatCurrency(pricing.base)}
-            </p>
-          </>
+          <p
+            className="mt-2 text-xs tracking-[0.14em] uppercase"
+            style={{ color: quoteTheme.colors.sage }}
+          >
+            {pkg.offerLabel || "Special offer"}
+          </p>
+        ) : null}
+        {pricing.applied ? (
+          <p
+            className="mt-1 font-serif text-lg line-through"
+            style={{ color: quoteTheme.colors.mutedText }}
+          >
+            {formatCurrency(pricing.base)}
+          </p>
         ) : null}
         <p
-          className="mt-1 font-serif text-5xl leading-none"
+          className="mt-2 font-serif text-3xl leading-none"
           style={{ color: quoteTheme.colors.forest }}
         >
           {formatCurrency(pricing.applied ? pricing.final : pkg.basePrice)}
         </p>
       </div>
-
-      <div className="mt-4 flex flex-wrap gap-2">
-        {pkg.team.map((member) => (
-          <span
-            key={member}
-            className="rounded-full border px-3 py-1 text-[0.66rem] tracking-[0.14em] uppercase"
-            style={{
-              borderColor: quoteTheme.colors.sage,
-              backgroundColor: "rgba(166,178,139,0.12)",
-              color: quoteTheme.colors.forestSoft,
-            }}
-          >
-            {formatTeamLabel(member)}
-          </span>
-        ))}
-      </div>
-
-      <div className="mt-5 space-y-3">
-        {pkg.items.map((item) => (
-          <div
-            key={item}
-            className="flex gap-3 border-b pb-3 text-sm"
-            style={{
-              borderColor: quoteTheme.colors.line,
-              color: quoteTheme.colors.supportText,
-            }}
-          >
-            <span style={{ color: quoteTheme.colors.sage }}>✦</span>
-            <span className="leading-6">{item}</span>
-          </div>
-        ))}
-      </div>
-
-      {pkg.specialFeatures.length ? (
-        <div
-          className="mt-5 rounded-[0.9rem] border px-4 py-4"
-          style={{
-            borderColor: quoteTheme.colors.line,
-            backgroundColor: quoteTheme.colors.ivory,
-          }}
-        >
-          <p
-            className="text-[0.68rem] tracking-[0.2em] uppercase"
-            style={{ color: quoteTheme.colors.sage }}
-          >
-            Special features
-          </p>
-          <p
-            className="mt-3 text-sm leading-7"
-            style={{ color: quoteTheme.colors.supportText }}
-          >
-            {pkg.specialFeatures.join(" • ")}
-          </p>
-        </div>
-      ) : null}
     </article>
   )
 }
@@ -216,6 +163,10 @@ function PackageCard({
 export function QuotePreview({ quote, salesProfile = null, publicView = false }: QuotePreviewProps) {
   const imageSlots = getQuoteImageSlots(quote)
   const summaryRows = getQuoteSummaryRows(quote)
+  const recommendedPackage = quote.packages.find((pkg) => pkg.recommended)
+  const recommendedPricing = recommendedPackage
+    ? computePackagePricing(recommendedPackage)
+    : null
   const whatsappHref = salesProfile?.whatsapp
     ? getQuoteWhatsAppMessageHref(
       salesProfile.whatsapp,
@@ -440,6 +391,9 @@ export function QuotePreview({ quote, salesProfile = null, publicView = false }:
                             event.location || quote.location || "Location",
                             event.guestCount || "Guest count TBD",
                             event.timing || "Timing TBD",
+                            ...[getCeremonyArrangementLabel(event.coverage)].filter(
+                              (label): label is string => label !== null
+                            ),
                           ].map((meta) => (
                             <span
                               key={meta}
@@ -535,6 +489,9 @@ export function QuotePreview({ quote, salesProfile = null, publicView = false }:
                             event.location || quote.location || "Location",
                             event.guestCount || "Guest count TBD",
                             event.timing || "Timing TBD",
+                            ...[getCeremonyArrangementLabel(event.coverage)].filter(
+                              (label): label is string => label !== null
+                            ),
                           ].map((meta) => (
                             <span
                               key={meta}
@@ -612,6 +569,12 @@ export function QuotePreview({ quote, salesProfile = null, publicView = false }:
                         {quote.preWeddingDate ? formatDateLabel(quote.preWeddingDate) : "Date to be decided"}
                       </p>
                       <p
+                        className="mt-3 text-sm font-medium"
+                        style={{ color: quoteTheme.colors.forestSoft }}
+                      >
+                        {quote.preWeddingLocation || quote.location || "Location to be decided"}
+                      </p>
+                      <p
                         className="mt-3 text-sm leading-7"
                         style={{ color: quoteTheme.colors.supportText }}
                       >
@@ -681,18 +644,8 @@ export function QuotePreview({ quote, salesProfile = null, publicView = false }:
         <section className="mt-20">
           <SectionHead
             kicker="Package comparison"
-            title="Compare your options side by side"
+            title="Compare your options"
           />
-          <div
-            className="mt-6 rounded-[0.2rem] border px-5 py-4 text-center"
-            style={{
-              borderColor: quoteTheme.colors.line,
-              backgroundColor: quoteTheme.colors.surfaceSoft,
-              color: quoteTheme.colors.supportText,
-            }}
-          >
-            {getQuotePackageCoverageNote(quote)}
-          </div>
           <div className="relative h-[18rem] overflow-hidden rounded-[0.2rem] md:h-[22rem]">
             <Image
               src={imageSlots.packageHero}
@@ -701,7 +654,40 @@ export function QuotePreview({ quote, salesProfile = null, publicView = false }:
               className="object-cover object-center"
             />
           </div>
-          <div className="mt-8 grid gap-6 xl:grid-cols-3 xl:items-stretch">
+          {recommendedPackage && recommendedPricing ? (
+            <div
+              className="mt-4 rounded-[0.2rem] border px-6 py-5 text-center"
+              style={{
+                borderColor: quoteTheme.colors.forest,
+                backgroundColor: quoteTheme.colors.forest,
+              }}
+            >
+              <p
+                className="text-xs tracking-[0.24em] uppercase"
+                style={{ color: quoteTheme.colors.blush }}
+              >
+                Recommended package
+              </p>
+              <p
+                className="mt-2 font-serif text-2xl font-semibold"
+                style={{ color: quoteTheme.colors.ivory }}
+              >
+                {recommendedPackage.name} — {formatCurrency(
+                  recommendedPricing.applied
+                    ? recommendedPricing.final
+                    : recommendedPackage.basePrice
+                )}
+              </p>
+              <p
+                className="mt-3 text-sm leading-6"
+                style={{ color: "rgba(249,246,243,0.82)" }}
+              >
+                For events outside Delhi NCR, the client will arrange and cover
+                the photography team&apos;s travel and accommodation.
+              </p>
+            </div>
+          ) : null}
+          <div className="mt-8 space-y-4">
             {quote.packages.map((pkg, packageIndex) => (
               <PackageCard
                 key={pkg.id}
@@ -767,6 +753,39 @@ export function QuotePreview({ quote, salesProfile = null, publicView = false }:
                           <span className="leading-6">{item}</span>
                         </div>
                       ))}
+                    </div>
+                    <div
+                      className="mt-6 border-t pt-5"
+                      style={{ borderColor: quoteTheme.colors.line }}
+                    >
+                      <p
+                        className="text-[0.68rem] tracking-[0.2em] uppercase"
+                        style={{ color: quoteTheme.colors.sage }}
+                      >
+                        Team
+                      </p>
+                      <p
+                        className="mt-2 text-sm leading-6"
+                        style={{ color: quoteTheme.colors.supportText }}
+                      >
+                        {pkg.team.map(formatTeamLabel).join(" · ")}
+                      </p>
+                      {pkg.specialFeatures.length ? (
+                        <div className="mt-5">
+                          <p
+                            className="text-[0.68rem] tracking-[0.2em] uppercase"
+                            style={{ color: quoteTheme.colors.sage }}
+                          >
+                            Special features
+                          </p>
+                          <p
+                            className="mt-2 text-sm leading-6"
+                            style={{ color: quoteTheme.colors.supportText }}
+                          >
+                            {pkg.specialFeatures.join(" · ")}
+                          </p>
+                        </div>
+                      ) : null}
                     </div>
                   </div>
                 )

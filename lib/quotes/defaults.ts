@@ -97,7 +97,10 @@ export function applyCoverageDefaults(quote: QuoteRecord): QuoteRecord {
   }
 }
 
-export function createDefaultQuote(ownerEmail: string, creatorUserId = ""): QuoteRecord {
+export function createDefaultQuote(
+  ownerEmail: string,
+  creatorUserId = ""
+): QuoteRecord {
   const now = new Date().toISOString()
 
   return applyCoverageDefaults({
@@ -126,7 +129,7 @@ export function createDefaultQuote(ownerEmail: string, creatorUserId = ""): Quot
         date: "",
         title: "",
         location: "",
-        coverage: "Both sides",
+        coverage: "",
         guestCount: "",
         timing: "Full day",
         team: ["Photography", "Videography"],
@@ -136,6 +139,7 @@ export function createDefaultQuote(ownerEmail: string, creatorUserId = ""): Quot
     preWeddingLabel: "Prewedding",
     preWeddingPriceLabel: "Priced separately",
     preWeddingDate: "",
+    preWeddingLocation: "",
     preWeddingTeam: [
       "Photographer",
       "Videographer",
@@ -154,11 +158,16 @@ export function createDefaultQuote(ownerEmail: string, creatorUserId = ""): Quot
     packages: [
       createPackage({
         name: "Classic",
-        subtitle: "An elegant essentials package for couples who want the full story covered with polished simplicity",
+        subtitle:
+          "An elegant essentials package for couples who want the full story covered with polished simplicity",
         badge: "Essential",
         recommended: false,
         basePrice: "125000",
-        team: ["Photographer", "Videographer", "Candid Photographer"],
+        team: [
+          "Traditional Photographer",
+          "Traditional Videographer",
+          "Candid Photographer",
+        ],
         items: [
           "All raw photos and videos from every covered function",
           "300 carefully selected photographs with refined edits",
@@ -172,13 +181,14 @@ export function createDefaultQuote(ownerEmail: string, creatorUserId = ""): Quot
       }),
       createPackage({
         name: "Signature",
-        subtitle: "Our most balanced storytelling package with stronger edits, richer delivery, and standout presentation",
+        subtitle:
+          "Our most balanced storytelling package with stronger edits, richer delivery, and standout presentation",
         badge: "Recommended",
         recommended: true,
         basePrice: "175000",
         team: [
-          "Photographer",
-          "Videographer",
+          "Traditional Photographer",
+          "Traditional Videographer",
           "Cinematic Videographer",
           "Candid Photographer",
           "Drone Operator",
@@ -199,13 +209,14 @@ export function createDefaultQuote(ownerEmail: string, creatorUserId = ""): Quot
       }),
       createPackage({
         name: "Luxury",
-        subtitle: "A fuller luxury experience built for larger celebrations, faster delivery, and the most complete keepsake set",
+        subtitle:
+          "A fuller luxury experience built for larger celebrations, faster delivery, and the most complete keepsake set",
         badge: "Premium",
         recommended: false,
         basePrice: "250000",
         team: [
-          "Photographer",
-          "Videographer",
+          "Traditional Photographer",
+          "Traditional Videographer",
           "Cinematic Videographer",
           "Candid Photographer",
           "Drone Operator",

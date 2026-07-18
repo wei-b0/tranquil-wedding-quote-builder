@@ -15,7 +15,6 @@ export const invoicePayloadSchema = z.object({
   invoiceTitle: z.string(),
   invoiceDate: z.string(),
   packageTotal: z.string(),
-  amountReceived: z.string(),
   currentInvoiceAmount: z.string(),
   balanceDue: z.string(),
   studio: z.object({

@@ -178,21 +178,12 @@ export function normalizeInvoice(input: InvoiceRecord): InvoiceRecord {
     (input as { packageTotal?: unknown }).packageTotal,
     total || subtotal || fallback.packageTotal
   )
-  const amountReceived = normalizeMoneyString(
-    (input as { amountReceived?: unknown }).amountReceived,
-    "0"
-  )
   const currentInvoiceAmount = normalizeMoneyString(
     (input as { currentInvoiceAmount?: unknown }).currentInvoiceAmount,
-    total || subtotal || fallback.currentInvoiceAmount
+    fallback.currentInvoiceAmount
   )
   const balanceDue = String(
-    Math.max(
-      parseAmount(packageTotal) -
-        parseAmount(amountReceived) -
-        parseAmount(currentInvoiceAmount),
-      0
-    )
+    Math.max(parseAmount(packageTotal) - parseAmount(currentInvoiceAmount), 0)
   )
 
   return {
@@ -204,7 +195,6 @@ export function normalizeInvoice(input: InvoiceRecord): InvoiceRecord {
     expiresAt,
     creatorUserId: input.creatorUserId || fallback.creatorUserId,
     packageTotal,
-    amountReceived,
     currentInvoiceAmount,
     balanceDue,
     studio: normalizeStudio(input.studio, fallback.studio),

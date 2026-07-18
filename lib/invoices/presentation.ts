@@ -77,21 +77,12 @@ export function resolveInvoicePackageTotal(invoice: InvoiceRecord) {
   return resolveInvoiceTotal(invoice)
 }
 
-export function resolveInvoiceAmountReceived(invoice: InvoiceRecord) {
-  return parseAmount(invoice.amountReceived)
-}
-
 export function resolveInvoiceCurrentAmount(invoice: InvoiceRecord) {
-  const explicit = parseAmount(invoice.currentInvoiceAmount)
-  if (explicit) return explicit
-  return resolveInvoiceTotal(invoice)
+  return parseAmount(invoice.currentInvoiceAmount)
 }
 
 export function resolveInvoiceBalanceDue(invoice: InvoiceRecord) {
-  const derived =
-    resolveInvoicePackageTotal(invoice) -
-    resolveInvoiceAmountReceived(invoice) -
-    resolveInvoiceCurrentAmount(invoice)
+  const derived = resolveInvoicePackageTotal(invoice) - resolveInvoiceCurrentAmount(invoice)
   return Math.max(derived, 0)
 }
 

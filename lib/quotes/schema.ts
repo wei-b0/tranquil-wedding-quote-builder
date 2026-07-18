@@ -35,6 +35,7 @@ export const quotePayloadSchema = z.object({
   preWeddingLabel: z.string(),
   preWeddingPriceLabel: z.string(),
   preWeddingDate: z.string(),
+  preWeddingLocation: z.string(),
   preWeddingTeam: z.array(z.string()),
   preWeddingDeliverables: z.array(z.string()),
   packages: z

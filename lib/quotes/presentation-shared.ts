@@ -38,6 +38,17 @@ function normalizeText(value: string) {
   return value.trim().toLowerCase()
 }
 
+export function isCeremonyArrangementEvent(title: string) {
+  const normalized = normalizeText(title)
+  return normalized === "haldi" || normalized === "mehandi"
+}
+
+export function getCeremonyArrangementLabel(value: string) {
+  if (value === "combined") return "Combined ceremony for bride and groom"
+  if (value === "separate") return "Separate ceremonies for bride and groom"
+  return null
+}
+
 function pluralize(value: number, singular: string, plural: string) {
   return `${value} ${value === 1 ? singular : plural}`
 }
@@ -55,7 +66,8 @@ export function getQuoteCoverageStats(quote: QuoteRecord) {
 }
 
 export function getQuoteCoverageSummary(quote: QuoteRecord) {
-  const { eventCount, dayCount, hasCompleteDates } = getQuoteCoverageStats(quote)
+  const { eventCount, dayCount, hasCompleteDates } =
+    getQuoteCoverageStats(quote)
 
   if (!eventCount) {
     return "Coverage to be planned"
@@ -70,10 +82,6 @@ export function getQuoteCoverageSummary(quote: QuoteRecord) {
   }
 
   return `${pluralize(eventCount, "event", "events")} across ${pluralize(dayCount, "day", "days")}`
-}
-
-export function getQuotePackageCoverageNote(quote: QuoteRecord) {
-  return `Pricing below is proposed for ${getQuoteCoverageSummary(quote).toLowerCase()}.`
 }
 
 export function getPackageDeliverables(pkg: QuotePackage) {
@@ -156,11 +164,19 @@ export function splitList(items: string[], size: number) {
 export function getEventImageObjectPosition(event: QuoteEvent) {
   const title = normalizeText(event.title)
 
-  if (title.includes("haldi") || title.includes("mehendi") || title.includes("mehandi")) {
+  if (
+    title.includes("haldi") ||
+    title.includes("mehendi") ||
+    title.includes("mehandi")
+  ) {
     return "center 35%"
   }
 
-  if (title.includes("wedding") || title.includes("phere") || title.includes("phera")) {
+  if (
+    title.includes("wedding") ||
+    title.includes("phere") ||
+    title.includes("phera")
+  ) {
     return "center 42%"
   }
 

@@ -70,15 +70,6 @@ function fromRow(row: Pick<QuoteRow, "payload" | "owner_id">): QuoteRecord {
   })
 }
 
-function normalizeLegacyRoleLabel(value: string) {
-  return value
-    .replaceAll("Traditional Photography", "Photography")
-    .replaceAll("Traditional Videography", "Videography")
-    .replaceAll("Traditional Photographer", "Photographer")
-    .replaceAll("Traditional Videographer", "Videographer")
-    .replaceAll("traditional wedding film", "wedding film")
-}
-
 const TRASH_RETENTION_DAYS = 30
 
 function addDays(value: string, days: number) {
@@ -107,7 +98,7 @@ function normalizeEvent(input: Partial<QuoteEvent> | undefined, fallback: QuoteE
     guestCount: input?.guestCount || "",
     timing: input?.timing || fallback.timing,
     team: Array.isArray(input?.team)
-      ? input!.team.filter(Boolean).map(normalizeLegacyRoleLabel)
+      ? input!.team.filter(Boolean)
       : fallback.team,
   }
 }
@@ -127,13 +118,13 @@ function normalizePackage(input: Partial<QuotePackage> | undefined, fallback: Qu
     finalPrice: input?.finalPrice || rawPrice,
     offerLabel: input?.offerLabel || fallback.offerLabel,
     team: Array.isArray(input?.team)
-      ? input!.team.filter(Boolean).map(normalizeLegacyRoleLabel)
+      ? input!.team.filter(Boolean)
       : fallback.team,
     items: Array.isArray(input?.items)
-      ? input!.items.filter(Boolean).map(normalizeLegacyRoleLabel)
+      ? input!.items.filter(Boolean)
       : fallback.items,
     specialFeatures: Array.isArray(input?.specialFeatures)
-      ? input!.specialFeatures.filter(Boolean).map(normalizeLegacyRoleLabel)
+      ? input!.specialFeatures.filter(Boolean)
       : fallback.specialFeatures,
   })
 }
@@ -207,9 +198,13 @@ export function normalizeQuote(input: QuoteRecord): QuoteRecord {
       (input as { preWeddingPriceLabel?: string }).preWeddingPriceLabel
         ? (input as { preWeddingPriceLabel: string }).preWeddingPriceLabel
         : fallback.preWeddingPriceLabel,
+    preWeddingLocation:
+      typeof (input as { preWeddingLocation?: unknown }).preWeddingLocation === "string"
+        ? (input as { preWeddingLocation: string }).preWeddingLocation
+        : fallback.preWeddingLocation,
     preWeddingTeam:
       Array.isArray(input.preWeddingTeam) && input.preWeddingTeam.length
-        ? input.preWeddingTeam.filter(Boolean).map(normalizeLegacyRoleLabel)
+        ? input.preWeddingTeam.filter(Boolean)
         : fallback.preWeddingTeam,
     preWeddingDeliverables:
       Array.isArray(input.preWeddingDeliverables) && input.preWeddingDeliverables.length

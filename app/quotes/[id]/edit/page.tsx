@@ -10,11 +10,14 @@ import { getQuoteStore } from "@/lib/quotes/store"
 
 export default async function EditQuotePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>
+  searchParams: Promise<{ preview?: string }>
 }) {
   const session = await requireSession()
   const { id } = await params
+  const { preview } = await searchParams
   const store = getQuoteStore()
   const quote = await store.getQuoteById(session, id)
 
@@ -40,7 +43,11 @@ export default async function EditQuotePage({
         </PdfExportLink>
       }
     >
-      <QuoteEditor initialQuote={quote} saveAction={saveQuoteAction} />
+      <QuoteEditor
+        initialQuote={quote}
+        saveAction={saveQuoteAction}
+        openPdfPreview={preview === "pdf"}
+      />
     </DashboardShell>
   )
 }

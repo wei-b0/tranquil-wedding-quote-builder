@@ -59,7 +59,6 @@ export type InvoiceRecord = {
   invoiceTitle: string
   invoiceDate: string
   packageTotal: string
-  amountReceived: string
   currentInvoiceAmount: string
   balanceDue: string
   studio: InvoiceStudioDetails

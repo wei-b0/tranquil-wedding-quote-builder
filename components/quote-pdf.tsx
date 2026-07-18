@@ -20,9 +20,9 @@ import {
   quoteHeadline,
 } from "@/lib/quotes/format"
 import {
+  getCeremonyArrangementLabel,
   getPackageDeliverables,
   getQuoteImageSlots,
-  getQuotePackageCoverageNote,
   getSalesProfileInitials,
   getSalesProfileRoleLine,
   getQuoteSummaryRows,
@@ -458,6 +458,11 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     color: quoteTheme.colors.sage,
   },
+  preWeddingLocation: {
+    marginBottom: 10,
+    fontSize: 9,
+    color: quoteTheme.colors.forestSoft,
+  },
   preWeddingStamp: {
     width: 76,
     minHeight: 76,
@@ -523,6 +528,34 @@ const styles = StyleSheet.create({
     objectFit: "cover",
     borderRadius: 2,
   },
+  packageRecommendation: {
+    marginTop: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: quoteTheme.colors.forest,
+    backgroundColor: quoteTheme.colors.forest,
+    textAlign: "center",
+  },
+  packageRecommendationLabel: {
+    fontSize: 6.2,
+    letterSpacing: 1.2,
+    textTransform: "uppercase",
+    color: quoteTheme.colors.blush,
+  },
+  packageRecommendationValue: {
+    marginTop: 5,
+    fontFamily: "QuoteDisplay",
+    fontSize: 13,
+    fontWeight: 700,
+    color: quoteTheme.colors.ivory,
+  },
+  packageRecommendationTravel: {
+    marginTop: 7,
+    fontSize: 7.2,
+    lineHeight: 1.35,
+    color: "rgba(249,246,243,0.82)",
+  },
   packageCoverageNote: {
     marginTop: 10,
     paddingHorizontal: 16,
@@ -537,19 +570,17 @@ const styles = StyleSheet.create({
   },
   packageGrid: {
     marginTop: 10,
-    flexDirection: "row",
-    justifyContent: "space-between",
   },
   packageCard: {
-    width: "31.7%",
+    width: "100%",
+    marginBottom: 8,
     backgroundColor: quoteTheme.colors.white,
-    paddingTop: 12,
-    paddingRight: 12,
-    paddingBottom: 12,
-    paddingLeft: 12,
-    borderRadius: 14,
+    padding: 15,
+    borderRadius: 2,
     borderWidth: 1,
     borderColor: pdfLineColor,
+    flexDirection: "row",
+    alignItems: "center",
   },
   packageCardFeatured: {
     backgroundColor: quoteTheme.colors.surfaceSoft,
@@ -561,26 +592,27 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     color: quoteTheme.colors.sage,
   },
-  packageHeader: {
-    marginTop: 4,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
+  packageIdentity: {
+    width: "24%",
   },
   packageName: {
-    width: "70%",
+    marginTop: 5,
     fontFamily: "QuoteDisplay",
     fontWeight: 700,
-    fontSize: 11.4,
+    fontSize: 15,
     color: quoteTheme.colors.forest,
   },
   packageBadge: {
+    alignSelf: "flex-start",
+    flexShrink: 0,
+    marginTop: 8,
     paddingHorizontal: 6,
     paddingVertical: 3,
     borderRadius: 999,
     fontSize: 5.4,
     letterSpacing: 0.7,
     textTransform: "uppercase",
+    textAlign: "center",
   },
   packageBadgeDefault: {
     backgroundColor: quoteTheme.colors.blush,
@@ -591,82 +623,63 @@ const styles = StyleSheet.create({
     color: quoteTheme.colors.ivory,
   },
   packageSubtitle: {
-    marginTop: 4,
-    fontSize: 5.4,
-    lineHeight: 1.2,
+    width: "46%",
+    paddingHorizontal: 14,
+    fontSize: 7,
+    lineHeight: 1.4,
     color: quoteTheme.colors.supportText,
   },
   packagePriceBox: {
-    marginTop: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 8,
-    backgroundColor: quoteTheme.colors.ivory,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: pdfLineColor,
+    width: "30%",
+    paddingLeft: 14,
+    borderLeftWidth: 1,
+    borderLeftColor: pdfLineColor,
+    alignItems: "flex-end",
   },
-  packageOffer: {
-    fontSize: 5.8,
+  packagePriceLabel: {
+    fontSize: 5.6,
     letterSpacing: 0.8,
     textTransform: "uppercase",
-    textAlign: "center",
+    color: quoteTheme.colors.sage,
+  },
+  packageOffer: {
+    marginTop: 4,
+    fontSize: 5.4,
+    letterSpacing: 0.6,
+    textTransform: "uppercase",
     color: quoteTheme.colors.sage,
   },
   packageOldPrice: {
-    marginTop: 3,
+    marginTop: 2,
     fontFamily: "QuoteDisplay",
-    fontSize: 8.8,
-    textAlign: "center",
+    fontSize: 7.5,
     textDecoration: "line-through",
     color: quoteTheme.colors.mutedText,
   },
   packagePrice: {
-    marginTop: 2,
+    marginTop: 4,
     fontFamily: "QuoteDisplay",
     fontWeight: 700,
-    fontSize: 15.5,
-    textAlign: "center",
+    fontSize: 17,
+    textAlign: "right",
     color: quoteTheme.colors.forest,
   },
-  packageTeamWrap: {
-    marginTop: 8,
-    flexDirection: "row",
-    flexWrap: "wrap",
+  deliverableContext: {
+    marginTop: 9,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: pdfLineColor,
   },
-  packageLine: {
-    flexDirection: "row",
-    paddingBottom: 4,
-    marginBottom: 4,
-    borderBottomWidth: 1,
-    borderBottomColor: pdfLightDivider,
-  },
-  packageLineText: {
-    flex: 1,
-    fontSize: 5.4,
-    lineHeight: 1.18,
-    color: quoteTheme.colors.supportText,
-  },
-  featureBox: {
-    marginTop: 8,
-    paddingTop: 7,
-    paddingRight: 8,
-    paddingBottom: 7,
-    paddingLeft: 8,
-    backgroundColor: quoteTheme.colors.ivory,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: pdfLineColor,
-  },
-  featureLabel: {
+  deliverableContextLabel: {
     fontSize: 5.8,
     letterSpacing: 0.8,
     textTransform: "uppercase",
     color: quoteTheme.colors.sage,
   },
-  featureText: {
-    marginTop: 4,
-    fontSize: 5.4,
-    lineHeight: 1.16,
+  deliverableContextText: {
+    marginTop: 3,
+    fontSize: 6.2,
+    lineHeight: 1.3,
     color: quoteTheme.colors.supportText,
   },
 
@@ -1000,6 +1013,9 @@ function EventChapter({
     event.location || quote.location || "Location",
     event.guestCount || "Guest count TBD",
     event.timing || "Timing TBD",
+    ...[getCeremonyArrangementLabel(event.coverage)].filter(
+      (label): label is string => label !== null
+    ),
   ]
 
   const visibleTeam = event.team.slice(0, MAX_VISIBLE_EVENT_TAGS)
@@ -1077,10 +1093,10 @@ function PackageCard({ pkg }: { pkg: QuotePackage }) {
       ]}
       wrap={false}
     >
-      <Text style={styles.packageLabel}>
-        {pkg.recommended ? "Recommended" : "Package"}
-      </Text>
-      <View style={styles.packageHeader}>
+      <View style={styles.packageIdentity}>
+        <Text style={styles.packageLabel}>
+          {pkg.recommended ? "Recommended package" : "Package"}
+        </Text>
         <Text style={styles.packageName}>{pkg.name}</Text>
         <Text
           style={
@@ -1095,6 +1111,7 @@ function PackageCard({ pkg }: { pkg: QuotePackage }) {
       <Text style={styles.packageSubtitle}>{pkg.subtitle}</Text>
 
       <View style={styles.packagePriceBox}>
+        <Text style={styles.packagePriceLabel}>Package price</Text>
         {pricing.applied ? (
           <Text style={styles.packageOffer}>
             {pkg.offerLabel || "Special offer"}
@@ -1109,32 +1126,6 @@ function PackageCard({ pkg }: { pkg: QuotePackage }) {
           {formatCurrency(pricing.applied ? pricing.final : pkg.basePrice)}
         </Text>
       </View>
-
-      <View style={styles.packageTeamWrap}>
-        {pkg.team.map((member) => (
-          <Text key={member} style={styles.teamTag}>
-            {formatTeamLabel(member)}
-          </Text>
-        ))}
-      </View>
-
-      <View style={{ marginTop: 8 }}>
-        {pkg.items.map((item) => (
-          <View key={item} style={styles.packageLine}>
-            <Text style={styles.listMark}>✦</Text>
-            <Text style={styles.packageLineText}>{item}</Text>
-          </View>
-        ))}
-      </View>
-
-      {pkg.specialFeatures.length ? (
-        <View style={styles.featureBox}>
-          <Text style={styles.featureLabel}>Special features</Text>
-          <Text style={styles.featureText}>
-            {pkg.specialFeatures.join(" • ")}
-          </Text>
-        </View>
-      ) : null}
     </View>
   )
 }
@@ -1162,6 +1153,10 @@ export function buildQuotePdfDocument(
 ): ReactElement<DocumentProps> {
   const imageSlots = getQuoteImageSlots(quote)
   const summaryRows = getQuoteSummaryRows(quote)
+  const recommendedPackage = quote.packages.find((pkg) => pkg.recommended)
+  const recommendedPricing = recommendedPackage
+    ? computePackagePricing(recommendedPackage)
+    : null
   const eventGroups = chunkArray(quote.events, 2)
   const policyItems = [...quote.terms, ...quote.privacyPolicy]
   const policyPages = chunkArray(policyItems, 18)
@@ -1272,9 +1267,14 @@ export function buildQuotePdfDocument(
             <View style={styles.preWeddingShell}>
               <View style={styles.preWeddingCopy}>
                 <View style={styles.preWeddingTop}>
-                  <Text style={styles.preWeddingDate}>
-                    {quote.preWeddingDate ? formatDateLabel(quote.preWeddingDate) : "Date to be decided"}
-                  </Text>
+                  <View>
+                    <Text style={styles.preWeddingDate}>
+                      {quote.preWeddingDate ? formatDateLabel(quote.preWeddingDate) : "Date to be decided"}
+                    </Text>
+                    <Text style={styles.preWeddingLocation}>
+                      {quote.preWeddingLocation || quote.location || "Location to be decided"}
+                    </Text>
+                  </View>
                   <View style={styles.preWeddingStamp}>
                     <Text style={styles.preWeddingStampValue}>
                       ₹ {quote.preWeddingPriceLabel || "Priced separately"}
@@ -1302,18 +1302,33 @@ export function buildQuotePdfDocument(
       ) : null}
 
       <Page size="A4" style={styles.page}>
-        <View style={styles.compactChapterPageBody}>
+        <View style={styles.centeredPageBody}>
           <SectionHead
             kicker="Package comparison"
-            title="Compare your options side by side"
+            title="Compare your options"
           />
           <Image
             src={pdfImageSource(imageSlots.packageHero)}
             style={styles.packageHero}
           />
-          <Text style={styles.packageCoverageNote}>
-            {getQuotePackageCoverageNote(quote)}
-          </Text>
+          {recommendedPackage && recommendedPricing ? (
+            <View style={styles.packageRecommendation}>
+              <Text style={styles.packageRecommendationLabel}>
+                Recommended package
+              </Text>
+              <Text style={styles.packageRecommendationValue}>
+                {recommendedPackage.name} — {formatCurrency(
+                  recommendedPricing.applied
+                    ? recommendedPricing.final
+                    : recommendedPackage.basePrice
+                )}
+              </Text>
+              <Text style={styles.packageRecommendationTravel}>
+                For events outside Delhi NCR, the client will arrange and cover
+                the photography team&apos;s travel and accommodation.
+              </Text>
+            </View>
+          ) : null}
           <View style={styles.packageGrid} wrap={false}>
             {quote.packages.map((pkg) => (
               <PackageCard key={pkg.id} pkg={pkg} />
@@ -1354,6 +1369,22 @@ export function buildQuotePdfDocument(
                     </Text>
                     <View style={{ marginTop: 10 }}>
                       <BulletList items={getPackageDeliverables(pkg)} />
+                    </View>
+                    <View style={styles.deliverableContext}>
+                      <Text style={styles.deliverableContextLabel}>Team</Text>
+                      <Text style={styles.deliverableContextText}>
+                        {pkg.team.map(formatTeamLabel).join(" · ")}
+                      </Text>
+                      {pkg.specialFeatures.length ? (
+                        <View style={{ marginTop: 7 }}>
+                          <Text style={styles.deliverableContextLabel}>
+                            Special features
+                          </Text>
+                          <Text style={styles.deliverableContextText}>
+                            {pkg.specialFeatures.join(" · ")}
+                          </Text>
+                        </View>
+                      ) : null}
                     </View>
                   </View>
                 ))}

@@ -79,6 +79,7 @@ export type QuoteRecord = {
   preWeddingLabel: string
   preWeddingPriceLabel: string
   preWeddingDate: string
+  preWeddingLocation: string
   preWeddingTeam: string[]
   preWeddingDeliverables: string[]
   packages: QuotePackage[]

@@ -16,7 +16,6 @@ import {
   formatInvoiceHeaderDate,
   formatInvoiceRowDate,
   resolveAmountInWords,
-  resolveInvoiceAmountReceived,
   resolveInvoiceBalanceDue,
   resolveInvoiceCurrentAmount,
   resolveInvoicePackageTotal,
@@ -413,7 +412,6 @@ export function buildInvoicePdfDocument(
   options?: Omit<DocumentProps, "children">
 ): ReactElement<DocumentProps> {
   const packageTotal = resolveInvoicePackageTotal(invoice)
-  const amountReceived = resolveInvoiceAmountReceived(invoice)
   const currentInvoiceAmount = resolveInvoiceCurrentAmount(invoice)
   const balanceDue = resolveInvoiceBalanceDue(invoice)
   const amountInWords = resolveAmountInWords(invoice)
@@ -453,7 +451,7 @@ export function buildInvoicePdfDocument(
                 </Text>
               </View>
               <View>
-                <Text style={styles.invoiceHeading}>INVOICE</Text>
+                <Text style={styles.invoiceHeading}>INVOICE / RECEIPT</Text>
                 <Text style={styles.invoiceDate}>
                   Date: {formatInvoiceHeaderDate(invoice.invoiceDate)}
                 </Text>
@@ -535,13 +533,7 @@ export function buildInvoicePdfDocument(
                     </Text>
                   </View>
                   <View style={styles.totalRow}>
-                    <Text style={styles.totalLabel}>Amount Received</Text>
-                    <Text style={[styles.totalValue, styles.totalValueStrong]}>
-                      {formatInvoiceCurrency(amountReceived, "Rs. 0")}
-                    </Text>
-                  </View>
-                  <View style={styles.totalRow}>
-                    <Text style={styles.totalLabel}>This Invoice</Text>
+                    <Text style={styles.totalLabel}>Payment Received</Text>
                     <Text style={styles.totalValue}>
                       {formatInvoiceCurrency(currentInvoiceAmount, "Rs. 0")}
                     </Text>

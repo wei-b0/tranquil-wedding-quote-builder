@@ -58,12 +58,7 @@ function syncInvoiceSummary(
 ): InvoiceRecord {
   const next = { ...invoice, ...updates }
   const balanceDue = String(
-    Math.max(
-      parseAmount(next.packageTotal) -
-        parseAmount(next.amountReceived) -
-        parseAmount(next.currentInvoiceAmount),
-      0
-    )
+    Math.max(parseAmount(next.packageTotal) - parseAmount(next.currentInvoiceAmount), 0)
   )
 
   return {
@@ -377,9 +372,9 @@ export function InvoiceEditor({
             Billing Summary
           </p>
           <h2 className="mt-2 font-serif text-2xl text-[#39362f]">
-            Show the package, received amount, and current demand
+            Record the package total and received payments
           </h2>
-          <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-5 grid gap-4 md:grid-cols-3">
             <Field label="Package total">
               <input
                 className={inputClassName()}
@@ -395,21 +390,7 @@ export function InvoiceEditor({
                 placeholder={String(packageTotal)}
               />
             </Field>
-            <Field label="Amount received so far">
-              <input
-                className={inputClassName()}
-                inputMode="numeric"
-                value={invoice.amountReceived}
-                onChange={(event) =>
-                  setInvoice((current) =>
-                    syncInvoiceSummary(current, {
-                      amountReceived: event.target.value,
-                    })
-                  )
-                }
-              />
-            </Field>
-            <Field label="This invoice requests">
+            <Field label="Payment received">
               <input
                 className={inputClassName()}
                 inputMode="numeric"
@@ -500,7 +481,7 @@ export function InvoiceEditor({
             Amount In Words
           </p>
           <h2 className="mt-2 font-serif text-2xl text-[#39362f]">
-            Describe the current invoice amount
+            Describe the payment received
           </h2>
           <div className="mt-4">
             <Field label="Amount in words">
