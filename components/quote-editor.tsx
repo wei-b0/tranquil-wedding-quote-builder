@@ -90,8 +90,15 @@ const teamPluralLabels: Record<string, string> = {
 }
 
 function normalizeTeamRole(value: string) {
-  if (value === "Photography") return "Photographer"
-  if (value === "Videography") return "Videographer"
+  if (["Photography", "Photographer", "Photographers"].includes(value)) {
+    return "Traditional Photographer"
+  }
+  if (["Videography", "Videographer", "Videographers"].includes(value)) {
+    return "Traditional Videographer"
+  }
+  if (value === "Candid") return "Candid Photographer"
+  if (value === "Cinematic Videographer") return "Cinematographer"
+  if (value === "Drone") return "Drone Operator"
   return value
 }
 
@@ -857,7 +864,10 @@ export function QuoteEditor({
                       coverage: "",
                       guestCount: "",
                       timing: "Morning",
-                      team: ["Photographer", "Videographer"],
+                      team: [
+                        "Traditional Photographer",
+                        "Traditional Videographer",
+                      ],
                     },
                   ],
                 }))

@@ -123,6 +123,9 @@ const styles = StyleSheet.create({
   compactChapterPageBody: {
     paddingTop: 34,
   },
+  eventPageBody: {
+    paddingTop: 48,
+  },
   centeredPageBody: {
     flexGrow: 1,
     justifyContent: "center",
@@ -358,7 +361,7 @@ const styles = StyleSheet.create({
   },
   eventCard: {
     width: "100%",
-    height: 288,
+    height: 300,
     backgroundColor: quoteTheme.colors.white,
     borderRadius: 2,
     overflow: "hidden",
@@ -418,18 +421,16 @@ const styles = StyleSheet.create({
     marginTop: 10,
     flexDirection: "row",
     flexWrap: "wrap",
-    maxHeight: 46,
-    overflow: "hidden",
   },
   teamTag: {
-    marginRight: 6,
-    marginBottom: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    marginRight: 4,
+    marginBottom: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
     borderRadius: 999,
     backgroundColor: "rgba(166,178,139,0.12)",
-    fontSize: 6.5,
-    letterSpacing: 0.7,
+    fontSize: 5.6,
+    letterSpacing: 0.45,
     textTransform: "uppercase",
     color: quoteTheme.colors.forestSoft,
   },
@@ -996,8 +997,6 @@ type NumberedItem = {
   text: string
 }
 
-const MAX_VISIBLE_EVENT_TAGS = 5
-
 function EventChapter({
   event,
   image,
@@ -1018,9 +1017,6 @@ function EventChapter({
     ),
   ]
 
-  const visibleTeam = event.team.slice(0, MAX_VISIBLE_EVENT_TAGS)
-  const hiddenTeamCount = event.team.length - visibleTeam.length
-
   const card = (
     <View style={styles.eventCard}>
       <View style={styles.eventImageWrap}>
@@ -1028,7 +1024,7 @@ function EventChapter({
       </View>
       <View style={styles.eventBody}>
         <Text style={styles.eventDate}>
-          {`Day ${index + 1} • ${formatDateLabel(event.date)}`}
+          {`Event ${index + 1} • ${formatDateLabel(event.date)}`}
         </Text>
         <Text style={styles.eventTitle}>{event.title || "Event title"}</Text>
         <View style={styles.eventMeta}>
@@ -1040,14 +1036,11 @@ function EventChapter({
           ))}
         </View>
         <View style={styles.teamRow}>
-          {visibleTeam.map((member) => (
+          {event.team.map((member) => (
             <Text key={member} style={styles.teamTag}>
               {member}
             </Text>
           ))}
-          {hiddenTeamCount > 0 ? (
-            <Text style={styles.teamTag}>{`+${hiddenTeamCount}`}</Text>
-          ) : null}
         </View>
       </View>
     </View>
@@ -1233,7 +1226,7 @@ export function buildQuotePdfDocument(
 
       {eventGroups.map((events, groupIndex) => (
         <Page key={`events-${groupIndex}`} size="A4" style={styles.page}>
-          <View style={styles.centeredPageBody}>
+          <View style={styles.eventPageBody}>
             <SectionHead
               kicker="Event flow"
               title="Every function gets its own visual chapter"

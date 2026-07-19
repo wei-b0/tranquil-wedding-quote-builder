@@ -473,7 +473,7 @@ export function QuotePreview({ quote, salesProfile = null, publicView = false }:
                           className="text-[0.68rem] tracking-[0.22em] uppercase"
                           style={{ color: quoteTheme.colors.sage }}
                         >
-                          Day {index + 1} • {formatDateLabel(event.date)}
+                          Event {index + 1} • {formatDateLabel(event.date)}
                         </p>
                         <h3
                           className="mt-3 font-serif text-4xl leading-none"
