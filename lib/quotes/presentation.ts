@@ -98,6 +98,7 @@ export const quoteAssetNames = {
     "event-prewedding",
     "event-wedding",
     "event-bhaat",
+    "event-paath",
   ],
 } as const
 
@@ -130,6 +131,11 @@ export const quoteImageConfig = {
       resolveAsset("gallery-6", "ttw-gallery-6", 1000, 760),
   ],
   eventKeywordSeeds: [
+    {
+      keywords: ["paath", "path", "pat"],
+      name: "event-paath",
+      seed: "ttw-event-paath",
+    },
     {
       keywords: ["engagement", "ring", "sagai"],
       name: "event-engagement",
