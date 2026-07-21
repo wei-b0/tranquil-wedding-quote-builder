@@ -21,6 +21,7 @@ import {
 } from "@/lib/quotes/format"
 import {
   getCeremonyArrangementLabel,
+  getEventImageObjectPosition,
   getPackageDeliverables,
   getQuoteImageSlots,
   getSalesProfileInitials,
@@ -1020,7 +1021,13 @@ function EventChapter({
   const card = (
     <View style={styles.eventCard}>
       <View style={styles.eventImageWrap}>
-        <Image src={image} style={styles.eventImage} />
+        <Image
+          src={image}
+          style={[
+            styles.eventImage,
+            { objectPosition: getEventImageObjectPosition(event) },
+          ]}
+        />
       </View>
       <View style={styles.eventBody}>
         <Text style={styles.eventDate}>

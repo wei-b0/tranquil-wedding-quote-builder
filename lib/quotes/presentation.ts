@@ -2,6 +2,7 @@ import fs from "node:fs"
 import path from "node:path"
 
 import type { QuoteEvent, QuoteRecord } from "@/lib/quotes/types"
+import { getEventImageSrc } from "@/lib/quotes/event-images"
 export {
   getEventImageObjectPosition,
   getCeremonyArrangementLabel,
@@ -132,82 +133,14 @@ export const quoteImageConfig = {
     extraGalleryAssets[2] ??
       resolveAsset("gallery-6", "ttw-gallery-6", 1000, 760),
   ],
-  eventKeywordSeeds: [
-    {
-      keywords: ["paath", "path", "pat"],
-      name: "event-paath",
-      seed: "ttw-event-paath",
-    },
-    {
-      keywords: ["engagement", "ring", "sagai"],
-      name: "event-engagement",
-      seed: "ttw-event-engagement",
-    },
-    {
-      keywords: ["haldi", "maiyaa", "maiya"],
-      name: "event-haldi",
-      seed: "ttw-event-haldi",
-    },
-    {
-      keywords: ["mehendi", "mehandi"],
-      name: "event-mehendi",
-      seed: "ttw-event-mehendi",
-    },
-    {
-      keywords: ["choora", "chooda"],
-      name: "event-choora",
-      seed: "ttw-event-choora",
-    },
-    {
-      keywords: ["cocktail", "sangeet"],
-      name: "event-cocktail",
-      seed: "ttw-event-cocktail",
-    },
-    {
-      keywords: ["pre wedding", "prewedding", "couple"],
-      name: "event-prewedding",
-      seed: "ttw-event-prewedding",
-    },
-    {
-      keywords: ["reception"],
-      name: "event-reception",
-      seed: "ttw-event-reception",
-    },
-    {
-      keywords: ["devgon", "dev gon"],
-      name: "event-devgon",
-      seed: "ttw-event-devgon",
-    },
-    {
-      keywords: ["wedding", "phere", "phera", "anand karaj"],
-      name: "event-wedding",
-      seed: "ttw-event-wedding",
-    },
-    {
-      keywords: ["bhaat", "lagan", "sagan"],
-      name: "event-bhaat",
-      seed: "ttw-event-bhaat",
-    },
-  ],
 }
 
-export function getEventImage(event: QuoteEvent, index: number) {
-  const title = event.title.trim().toLowerCase()
-  const matched = quoteImageConfig.eventKeywordSeeds.find((entry) =>
-    entry.keywords.some((keyword) => title.includes(keyword))
-  )
-
-  if (matched) {
-    return resolveAsset(matched.name, matched.seed, 1200, 900)
-  }
-
-  return quoteImageConfig.gallery[index % quoteImageConfig.gallery.length]
+export function getEventImage(event: QuoteEvent) {
+  return getEventImageSrc(event)
 }
 
 export function getQuoteImageSlots(quote: QuoteRecord) {
-  const eventImages = quote.events.map((event, index) =>
-    getEventImage(event, index)
-  )
+  const eventImages = quote.events.map((event) => getEventImage(event))
 
   return {
     hero: quoteImageConfig.hero,

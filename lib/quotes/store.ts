@@ -1,6 +1,7 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { createSupabaseAnonClient } from "@/lib/supabase/public"
 import { applyCoverageDefaults, createDefaultQuote, normalizeDiscountType } from "@/lib/quotes/defaults"
+import { normalizeEventImage } from "@/lib/quotes/event-images"
 import { syncPackagePricing } from "@/lib/quotes/format"
 import { getSalesProfileStore } from "@/lib/sales-profiles/store"
 import type {
@@ -30,7 +31,6 @@ type QuoteStore = {
   deleteQuotePermanently(session: QuoteSession, id: string): Promise<void>
   createQuote(session: QuoteSession): Promise<QuoteRecord>
 }
-
 type QuoteRow = {
   id: string
   slug: string
@@ -100,6 +100,7 @@ function normalizeEvent(input: Partial<QuoteEvent> | undefined, fallback: QuoteE
     team: Array.isArray(input?.team)
       ? input!.team.filter(Boolean)
       : fallback.team,
+    image: normalizeEventImage(input?.image),
   }
 }
 

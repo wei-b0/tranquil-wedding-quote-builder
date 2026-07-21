@@ -11,6 +11,19 @@ export type PaymentMilestone = {
   description: string
 }
 
+export type QuoteEventImage =
+  | { source: "auto" }
+  | { source: "asset"; assetKey: string }
+  | { source: "media"; mediaId: string; url: string }
+
+export type EventMedia = {
+  id: string
+  url: string
+  width: number
+  height: number
+  createdAt: string
+}
+
 export type QuoteEvent = {
   id: string
   date: string
@@ -20,6 +33,7 @@ export type QuoteEvent = {
   guestCount: string
   timing: string
   team: string[]
+  image: QuoteEventImage
 }
 
 export type QuotePackage = {

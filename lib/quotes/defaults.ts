@@ -133,6 +133,7 @@ export function createDefaultQuote(
         guestCount: "",
         timing: "Full day",
         team: ["Traditional Photographer", "Traditional Videographer"],
+        image: { source: "auto" },
       },
     ],
     includePreWedding: true,

@@ -1,20 +1,18 @@
 "use client"
 
 import Link from "next/link"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useFormStatus } from "react-dom"
 import { Loader2 } from "lucide-react"
 
 import { PdfExportLink } from "@/components/pdf-export-link"
+import { EventImagePicker } from "@/components/event-image-picker"
 import { ToastOnMount } from "@/components/toast-on-mount"
 import { Button } from "@/components/ui/button"
 import { applyCoverageDefaults } from "@/lib/quotes/defaults"
 import { syncPackagePricing } from "@/lib/quotes/format"
-import {
-  getQuoteCoverageSummary,
-  isCeremonyArrangementEvent,
-} from "@/lib/quotes/presentation-shared"
-import type { QuotePackage, QuoteRecord } from "@/lib/quotes/types"
+import { isCeremonyArrangementEvent } from "@/lib/quotes/presentation-shared"
+import type { EventMedia, QuotePackage, QuoteRecord } from "@/lib/quotes/types"
 
 type QuoteEditorProps = {
   initialQuote: QuoteRecord
@@ -567,10 +565,48 @@ export function QuoteEditor({
   const [isPreWeddingDeliverablesOpen, setIsPreWeddingDeliverablesOpen] = useState(false)
   const [isLegalSectionOpen, setIsLegalSectionOpen] = useState(false)
   const [isPreviewOpen, setIsPreviewOpen] = useState(openPdfPreview)
+  const [eventMedia, setEventMedia] = useState<EventMedia[]>([])
+  const [eventMediaLoading, setEventMediaLoading] = useState(true)
+  const [eventMediaError, setEventMediaError] = useState<string | null>(null)
   const [showSavedToast] = useState(
-    () => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("saved") === "1"
+    () =>
+      typeof window !== "undefined" &&
+      new URLSearchParams(window.location.search).get("saved") === "1"
   )
-  const coverageSummary = getQuoteCoverageSummary(quote)
+  useEffect(() => {
+    let active = true
+
+    async function loadEventMedia() {
+      try {
+        const response = await fetch("/api/event-media")
+        const payload = (await response.json()) as {
+          media?: EventMedia[]
+          error?: string
+        }
+
+        if (!response.ok || !payload.media) {
+          throw new Error(payload.error || "Could not load your media library.")
+        }
+
+        if (active) setEventMedia(payload.media)
+      } catch (error) {
+        if (active) {
+          setEventMediaError(
+            error instanceof Error
+              ? error.message
+              : "Could not load your media library."
+          )
+        }
+      } finally {
+        if (active) setEventMediaLoading(false)
+      }
+    }
+
+    loadEventMedia()
+    return () => {
+      active = false
+    }
+  }, [])
 
   return (
     <div>
@@ -692,29 +728,43 @@ export function QuoteEditor({
                   ) : null}
                 </div>
                 <Field label="Event type">
-                  <select
-                    className={inputClassName()}
-                    value={eventPresets.includes(item.title) ? item.title : item.title ? "__custom__" : ""}
-                    onChange={(event) => {
-                      const nextTitle =
-                        event.target.value === "__custom__" ? "Custom event" : event.target.value
+                    <select
+                      className={inputClassName()}
+                      value={
+                        eventPresets.includes(item.title)
+                          ? item.title
+                          : item.title
+                            ? "__custom__"
+                            : ""
+                      }
+                      onChange={(event) => {
+                        const nextTitle =
+                          event.target.value === "__custom__"
+                            ? "Custom event"
+                            : event.target.value
 
-                      setQuote((current) => ({
-                        ...current,
-                        events: current.events.map((entry) =>
-                          entry.id === item.id ? { ...entry, title: nextTitle } : entry
-                        ),
-                      }))
-                    }}
-                  >
-                    <option value="">Select event</option>
-                    {eventPresets.map((preset) => (
-                      <option key={preset} value={preset}>
-                        {preset}
-                      </option>
-                    ))}
-                    <option value="__custom__">Custom event</option>
-                  </select>
+                        setQuote((current) => ({
+                          ...current,
+                          events: current.events.map((entry) =>
+                            entry.id === item.id
+                              ? {
+                                  ...entry,
+                                  title: nextTitle,
+                                  image: { source: "auto" },
+                                }
+                              : entry
+                          ),
+                        }))
+                      }}
+                    >
+                      <option value="">Select event</option>
+                      {eventPresets.map((preset) => (
+                        <option key={preset} value={preset}>
+                          {preset}
+                        </option>
+                      ))}
+                      <option value="__custom__">Custom event</option>
+                    </select>
                 </Field>
                 {item.title ? (
                   <>
@@ -728,7 +778,9 @@ export function QuoteEditor({
                               setQuote((current) => ({
                                 ...current,
                                 events: current.events.map((entry) =>
-                                  entry.id === item.id ? { ...entry, title: event.target.value } : entry
+                                  entry.id === item.id
+                                    ? { ...entry, title: event.target.value, image: { source: "auto" } }
+                                    : entry
                                 ),
                               }))
                             }
@@ -736,6 +788,28 @@ export function QuoteEditor({
                         </Field>
                       </div>
                     ) : null}
+                    <div className="mt-4 border-t border-[#e3ddd2] pt-4">
+                      <EventImagePicker
+                        event={item}
+                        media={eventMedia}
+                        mediaLoading={eventMediaLoading}
+                        mediaError={eventMediaError}
+                        onChange={(image) =>
+                          setQuote((current) => ({
+                            ...current,
+                            events: current.events.map((entry) =>
+                              entry.id === item.id ? { ...entry, image } : entry
+                            ),
+                          }))
+                        }
+                        onMediaAdded={(media) =>
+                          setEventMedia((current) => [
+                            media,
+                            ...current.filter((entry) => entry.id !== media.id),
+                          ])
+                        }
+                      />
+                    </div>
                     <div className="mt-4 grid gap-4 md:grid-cols-2">
                       <Field label="Date">
                         <input
@@ -868,6 +942,7 @@ export function QuoteEditor({
                         "Traditional Photographer",
                         "Traditional Videographer",
                       ],
+                      image: { source: "auto" },
                     },
                   ],
                 }))

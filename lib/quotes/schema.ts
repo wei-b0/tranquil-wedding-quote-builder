@@ -1,5 +1,7 @@
 import { z } from "zod"
 
+import { isAllowedEventMediaUrl } from "@/lib/quotes/event-images"
+
 export const quotePayloadSchema = z.object({
   id: z.string().min(1),
   slug: z.string().min(1),
@@ -29,6 +31,18 @@ export const quotePayloadSchema = z.object({
       guestCount: z.string(),
       timing: z.string(),
       team: z.array(z.string()),
+      image: z.discriminatedUnion("source", [
+        z.object({ source: z.literal("auto") }),
+        z.object({
+          source: z.literal("asset"),
+          assetKey: z.string().min(1),
+        }),
+        z.object({
+          source: z.literal("media"),
+          mediaId: z.string().uuid(),
+          url: z.string().url().refine(isAllowedEventMediaUrl),
+        }),
+      ]),
     })
   ),
   includePreWedding: z.boolean(),

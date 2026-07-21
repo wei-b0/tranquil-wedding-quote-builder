@@ -162,7 +162,27 @@ export function splitList(items: string[], size: number) {
 }
 
 export function getEventImageObjectPosition(event: QuoteEvent) {
+  if (event.image.source === "media") {
+    return "center center"
+  }
+
   const title = normalizeText(event.title)
+
+  if (
+    title.includes("reception") ||
+    (event.image.source === "asset" &&
+      event.image.assetKey === "event-reception")
+  ) {
+    return "center 30%"
+  }
+
+  if (
+    title.includes("devgon") ||
+    title.includes("dev gon") ||
+    (event.image.source === "asset" && event.image.assetKey === "event-devgon")
+  ) {
+    return "center 18%"
+  }
 
   if (
     title.includes("haldi") ||
