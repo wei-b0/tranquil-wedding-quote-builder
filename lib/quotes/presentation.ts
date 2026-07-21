@@ -99,6 +99,8 @@ export const quoteAssetNames = {
     "event-wedding",
     "event-bhaat",
     "event-paath",
+    "event-reception",
+    "event-devgon",
   ],
 } as const
 
@@ -167,7 +169,17 @@ export const quoteImageConfig = {
       seed: "ttw-event-prewedding",
     },
     {
-      keywords: ["wedding", "phere", "phera", "anand karaj", "reception"],
+      keywords: ["reception"],
+      name: "event-reception",
+      seed: "ttw-event-reception",
+    },
+    {
+      keywords: ["devgon", "dev gon"],
+      name: "event-devgon",
+      seed: "ttw-event-devgon",
+    },
+    {
+      keywords: ["wedding", "phere", "phera", "anand karaj"],
       name: "event-wedding",
       seed: "ttw-event-wedding",
     },
